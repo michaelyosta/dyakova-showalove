@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Установка приложения «Доска учителя» на Mi Pad 5 и в Chrome</title>
+<style>
+:root{
+  color-scheme:dark light;
+  --bg:#141415;
+  --fg:#ededed;
+  --fg-2:#a1a1a6;
+  --panel:#19191b;
+  --line:rgba(237,237,237,.08);
+  --line-strong:rgba(237,237,237,.16);
+  --soft:#232325;
+  --muted:#85858b;
+  --accent:#38bdf8;
+  --accent-ink:#09131a;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+}
+@media(prefers-color-scheme:light){
+  :root{
+    --bg:#fafafa;
+    --fg:#171717;
+    --fg-2:#525252;
+    --panel:#ffffff;
+    --line:rgba(23,23,23,.08);
+    --line-strong:rgba(23,23,23,.16);
+    --soft:#f4f4f5;
+    --muted:#737373;
+    --accent:#0284c7;
+    --accent-ink:#ffffff;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:24px 16px 40px;background:var(--bg);color:var(--fg);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+h1{font-size:20px;font-weight:500;line-height:1.25;margin:0 0 8px}
+h2{font-size:16px;font-weight:500;line-height:1.3;margin:0 0 12px}
+p{margin:0 0 12px;color:var(--fg-2)}
+p:last-child,ol:last-child,ul:last-child{margin-bottom:0}
+ol,ul{margin:0 0 12px;padding-left:20px;color:var(--fg-2)}
+li{margin-bottom:8px}
+strong{color:var(--fg);font-weight:500}
+code{
+  background:var(--soft);color:var(--fg);border:1px solid var(--line);
+  padding:2px 8px;border-radius:6px;
+  font-family:ui-monospace,SFMono-Regular,"JetBrains Mono",Menlo,Consolas,monospace;
+  font-size:13px;word-break:break-all;font-variant-numeric:tabular-nums;
+}
+.muted{color:var(--muted);font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+a.btn,button.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:44px;padding:8px 16px;border-radius:8px;border:1px solid var(--line-strong);
+  background:var(--soft);color:var(--fg);text-decoration:none;font:inherit;font-weight:500;
+  cursor:pointer;transition:background-color 140ms var(--ease),border-color 140ms var(--ease),transform 140ms var(--ease);
+}
+a.btn:hover,button.btn:hover{background:var(--panel);border-color:var(--accent)}
+a.btn:active,button.btn:active{transform:scale(0.98)}
+a.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+a.btn.primary:hover{filter:brightness(1.06)}
+a.btn:focus-visible,button.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.status{font-size:13px;color:var(--muted);display:inline-flex;align-items:center}
+</style>
+</head>
+<body>
+<main>
+  <section class="card">
+    <h1>Установка «Доски учителя»</h1>
+    <p>Откройте доску по защищённому адресу и установите её из меню браузера как отдельное приложение.</p>
+    <div class="actions"><a class="btn primary" href="./">Открыть доску</a></div>
+  </section>
+  <section class="card">
+    <h2>Mi Pad 5 и другие устройства Android</h2>
+    <ol>
+      <li>Откройте доску в Chrome.</li>
+      <li>В меню браузера выберите установку приложения или добавление на главный экран.</li>
+      <li>Запускайте «Доску учителя» с появившегося значка.</li>
+    </ol>
+    <p>Публичный сайт использует HTTPS. Установка дополнительных сертификатов и изменение защитных настроек браузера не требуются.</p>
+  </section>
+  <section class="card">
+    <h2>Работа с уроками</h2>
+    <p>Проекты и снэпы сохраняются в браузере на текущем устройстве. Для переноса урока с локальной версии или другого устройства используйте экспорт и импорт проекта в формате JSON.</p>
+    <p>После первого открытия приложение кеширует свои ресурсы для работы без подключения к сети.</p>
+  </section>
+</main>
+
+</body>
+</html>

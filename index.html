@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Шар, вписанный в правильную пирамиду</title>
+<style>
+:root{--bg:#f4f5f7;--fg:#1b1d22;--panel:rgba(255,255,255,.88);--line:rgba(0,0,0,.14);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161b;--fg:#e9eaee;--panel:rgba(28,31,38,.88);--line:rgba(255,255,255,.16)}}
+:root[data-theme="dark"]{--bg:#14161b;--fg:#e9eaee;--panel:rgba(28,31,38,.88);--line:rgba(255,255,255,.16)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;overscroll-behavior:none}
+#c{position:relative;width:100%;height:100%}
+#c canvas{display:block}
+.box{position:absolute;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.panel{left:calc(12px + env(safe-area-inset-left,0px));top:12px;width:min(320px,calc(100% - 24px));max-height:calc(100% - 150px);overflow:auto;overscroll-behavior:contain}
+.panel summary{font-weight:600;cursor:pointer}
+.panel label{display:flex;align-items:center;gap:8px;margin-top:6px}
+.panel label span{min-width:76px}
+.panel label b{min-width:34px;text-align:right}
+.panel input[type=range]{flex:1;min-width:0}
+.panel i{flex:none;width:18px;height:5px;border-radius:3px}
+.panel h4{margin:12px 0 2px;font-size:13px}
+.panel table{border-collapse:collapse;width:100%;font-size:13px}
+.panel td{padding:2px 0}.panel td+td{text-align:right;padding-left:8px}
+.panel p{margin:10px 0 0;font-size:12.5px;opacity:.75}
+button{font:inherit;color:inherit;background:transparent;border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+.steps{left:50%;transform:translateX(-50%);bottom:12px;width:min(580px,calc(100% - 24px))}
+.steps p{margin:0 0 8px}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#sec{right:calc(12px + env(safe-area-inset-right,0px));top:12px;width:210px;padding:4px;display:none}
+@media (pointer:coarse){.panel label{min-height:40px;margin-top:0}.panel input[type=checkbox]{width:22px;height:22px}button{min-height:40px}}
+@media (max-width:640px){.panel{left:8px;right:8px;top:8px;width:auto;max-height:55%}.steps{bottom:8px}#sec{top:64px;right:8px;width:150px}}
+</style>
+</head>
+<body>
+<div id="c">
+<details class="box panel" open>
+<summary>Правильная пирамида и вписанный шар</summary>
+<h4>Параметры</h4>
+<label><span>Сторон n</span><input type="range" data-p="n" min="3" max="8" step="1" value="3"><b></b></label>
+<label><span>Сторона a</span><input type="range" data-p="a" min="1" max="12" step="0.1" value="6"><b></b></label>
+<label><span>Высота h</span><input type="range" data-p="h" min="1" max="12" step="0.1" value="4.9"><b></b></label>
+<label><button id="reg">Правильный тетраэдр</button></label>
+<h4>Расчёт</h4>
+<table id="calc"></table>
+<h4>Элементы</h4>
+<div id="tg"></div>
+<p>Вращение — перетаскиванием, масштаб — колесом или двумя пальцами. Шаги — кнопками или стрелками на клавиатуре.</p>
+</details>
+<div class="box" id="sec"></div>
+<div class="box steps"><p id="hint"></p><div class="nav"><button id="pv">‹ Назад</button><b id="sn"></b><button id="nx">Далее ›</button></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+try{(()=>{
+const V=(x,y,z)=>new THREE.Vector3(x,y,z),mid=(p,q)=>p.clone().add(q).multiplyScalar(.5),$=id=>document.getElementById(id);
+
+// ---------- Геометрия (без отображения): правильная n-угольная пирамида, сторона основания a, высота h ----------
+function solve(n,a,h){
+  const R=a/(2*Math.sin(Math.PI/n)),rho=a/(2*Math.tan(Math.PI/n)),l=Math.hypot(h,rho),r=rho*h/(rho+l);
+  const Sb=n*a*rho/2,Sf=Sb+n*a*l/2;
+  return {n,a,h,R,rho,l,r,Sf,vol:Sb*h/3};
+}
+// Плоский чертёж сечения SOM: окружность касается OM в O и SM в T, MT = MO = ρ
+function secSVG(m){
+  const k=170/Math.max(m.h,m.rho+m.r),X=x=>15+k*(x+m.r),Y=y=>185-k*y,Tx=m.rho-m.rho*m.rho/m.l,Ty=m.rho*m.h/m.l;
+  const ln=(x1,y1,x2,y2,c)=>`<line x1="${X(x1)}" y1="${Y(y1)}" x2="${X(x2)}" y2="${Y(y2)}" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`;
+  const dt=(x,y)=>`<circle cx="${X(x)}" cy="${Y(y)}" r="4.5" fill="#f59e0b"/>`;
+  const tx=(x,y,s)=>`<text x="${X(x)+5}" y="${Y(y)-5}" font-size="13" font-weight="700" fill="currentColor">${s}</text>`;
+  return `<svg viewBox="0 0 200 200" style="display:block;width:100%;height:auto"><circle cx="${X(0)}" cy="${Y(m.r)}" r="${k*m.r}" fill="rgba(125,211,252,.3)" stroke="#38bdf8" stroke-width="2"/>`
+    +ln(0,0,m.rho,0,'#ec4899')+ln(0,0,0,m.h,'#ef4444')+ln(m.rho,0,0,m.h,'#3b82f6')+ln(0,m.r,Tx,Ty,'#22c55e')
+    +dt(0,0)+dt(Tx,Ty)+tx(0,m.h,'S')+tx(0,0,'O')+tx(m.rho,0,'M')+tx(0,m.r,'I')+tx(Tx,Ty,'T')+'</svg>';
+}
+
+// ---------- Сцена ----------
+const el=$('c'),scene=new THREE.Scene(),renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));el.prepend(renderer.domElement);
+const camera=new THREE.PerspectiveCamera(38,1,.1,100);camera.position.set(5.4,3.4,5.6);
+const ctl=new THREE.OrbitControls(camera,renderer.domElement);
+ctl.enableDamping=true;ctl.enablePan=false;ctl.minDistance=3.5;ctl.maxDistance=30;ctl.autoRotateSpeed=1.2;
+ctl.autoRotate=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+ctl.addEventListener('start',()=>{ctl.autoRotate=false});
+scene.add(new THREE.AmbientLight(0xffffff,.7));
+const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(3,6,4);scene.add(dl);
+
+// Элементы: ключ, цвет, название, шаг, с которого элемент показывается
+const EL=[['f','#9aa0aa','Грани и рёбра',0],['cc','#a855f7','Радиус описанной окружности основания R = OA',1],['ic','#ec4899','Радиус вписанной окружности основания ρ = OM',1],['h','#ef4444','Высота h = SO',2],['a','#3b82f6','Апофемы l = SM',3],['s','#7dd3fc','Вписанный шар',4],['r','#22c55e','Радиус шара r = IT',5],['t','#f59e0b','Точки касания O, T',5],['x','#eab308','Сечение плоскостью SOM',6]];
+const ST=[
+['Пирамида','В основании правильный n-угольник, вершина S проецируется в его центр O.'],
+['Окружности основания','R = OA — радиус описанной окружности, ρ = OM — вписанной (M — середина стороны основания).'],
+['Высота','Высота h = SO перпендикулярна основанию.'],
+['Апофемы','Апофема l = SM — высота боковой грани. Так как OM ⟂ AB, то и SM ⟂ AB, а l² = h² + ρ².'],
+['Вписанный шар','Центр шара I лежит на высоте: он равноудалён от основания и всех боковых граней.'],
+['Радиус и точки касания','Шар касается основания в точке O, а боковых граней — в точках T на апофемах. Радиус IT перпендикулярен грани, IO = IT = r.'],
+['Сечение SOM','В плоскости SOM шар даёт окружность, касающуюся OM в точке O и SM в точке T. Касательные из M равны: MT = MO = ρ. Центр I лежит на биссектрисе угла SMO, откуда r = ρh / (ρ + l).'],
+['Проверка','Объём V = Sосн·h/3, S — площадь полной поверхности. Должно получиться r = 3V / S.']];
+const G={};EL.forEach(e=>{G[e[0]]=new THREE.Group();scene.add(G[e[0]])});
+const clear=g=>g.children.slice().forEach(c=>{g.remove(c);if(c.geometry&&!c.isSprite)c.geometry.dispose();if(c.material)c.material.dispose()});
+const tex={};
+function label(t,p,g){let m=tex[t];if(!m){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');x.font='700 64px system-ui,sans-serif';x.textAlign='center';x.textBaseline='middle';x.lineWidth=10;x.lineJoin='round';x.strokeStyle='#14161b';x.strokeText(t,64,68);x.fillStyle='#fff';x.fillText(t,64,68);m=tex[t]=new THREE.CanvasTexture(c)}const q=new THREE.Sprite(new THREE.SpriteMaterial({map:m,depthTest:false}));q.position.copy(p);q.scale.set(.5,.5,1);g.add(q)}
+function seg(g,p,q,rad,col){const d=q.clone().sub(p),m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,d.length(),10),new THREE.MeshBasicMaterial({color:col}));m.position.copy(p).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());g.add(m)}
+function dot(g,p,col,rad){const m=new THREE.Mesh(new THREE.SphereGeometry(rad,20,14),new THREE.MeshBasicMaterial({color:col}));m.position.copy(p);g.add(m)}
+function ring(g,rad,col){const m=new THREE.Mesh(new THREE.TorusGeometry(rad,.012,8,120),new THREE.MeshBasicMaterial({color:col}));m.rotation.x=Math.PI/2;g.add(m);return m}
+const tri=(pts,col,op)=>new THREE.Mesh(new THREE.BufferGeometry().setFromPoints(pts),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false}));
+
+const S={n:3,a:6,h:6*Math.sqrt(2/3)};
+function build(){
+  Object.values(G).forEach(clear);
+  const m=solve(S.n,S.a,S.h),n=m.n,k=1.8/Math.max(m.R,m.h*.7),v=(x,y,z)=>V(x*k,y*k,z*k);
+  const pol=(d,i)=>{const t=2*Math.PI*i/n;return v(d*Math.cos(t),0,d*Math.sin(t))};
+  const Sv=v(0,m.h,0),O=v(0,0,0),I=v(0,m.r,0),A=[...Array(n)].map((_,i)=>pol(m.R,i)),M=A.map((_,i)=>pol(m.rho,i+.5)),T=M.map(p=>p.clone().lerp(Sv,m.rho/m.l));
+  ctl.target.set(0,m.h*k*.42,0);
+  // грани, рёбра, вершины
+  const pts=[];
+  A.forEach((p,i)=>{const q=A[(i+1)%n];seg(G.f,p,q,.014,0x9aa0aa);seg(G.f,Sv,p,.014,0x9aa0aa);dot(G.f,p,0x9aa0aa,.035);label('ABCDEFGH'[i],p.clone().multiplyScalar(1.13).add(V(0,-.04,0)),G.f);pts.push(p,q,Sv,O,p,q)});
+  dot(G.f,Sv,0x9aa0aa,.035);label('S',Sv.clone().add(V(0,.26,0)),G.f);label('O',O.clone().add(V(0,-.26,0)),G.f);
+  G.f.add(tri(pts,0x8fb4ff,.1));
+  // окружности основания и их радиусы
+  ring(G.cc,m.R*k,0xa855f7);ring(G.ic,m.rho*k,0xec4899);
+  A.forEach(p=>seg(G.cc,O,p,.022,0xa855f7));M.forEach(p=>seg(G.ic,O,p,.022,0xec4899));
+  label('R',mid(O,A[0]).add(V(0,.17,0)),G.cc);label('ρ',mid(O,M[0]).add(V(0,.17,0)),G.ic);
+  // высота и апофемы
+  seg(G.h,Sv,O,.03,0xef4444);label('h',mid(Sv,I).add(V(.22,0,.22)),G.h);
+  M.forEach(p=>seg(G.a,Sv,p,.022,0x3b82f6));label('l',mid(Sv,M[0]).add(V(.2,.1,.2)),G.a);
+  // шар, радиусы к граням, точки касания
+  const b=new THREE.Mesh(new THREE.SphereGeometry(m.r*k,48,32),new THREE.MeshPhongMaterial({color:0x7dd3fc,transparent:true,opacity:.3,shininess:90,depthWrite:false}));
+  b.position.copy(I);G.s.add(b);label('I',I.clone().add(V(.26,.1,.26)),G.s);
+  T.forEach(p=>{seg(G.r,I,p,.022,0x22c55e);dot(G.t,p,0xf59e0b,.07)});dot(G.t,O,0xf59e0b,.07);dot(G.r,I,0x22c55e,.05);
+  label('r',mid(I,T[0]).add(V(0,.17,0)),G.r);label('T',T[0].clone().add(T[0].clone().sub(I).normalize().multiplyScalar(.26)),G.t);
+  // сечение плоскостью SOM и большая окружность шара в ней
+  G.x.add(tri([Sv,O,M[0]],0xeab308,.28));
+  const th=Math.PI/n,cr=ring(G.x,m.r*k,0x38bdf8);cr.rotation.set(0,0,0);cr.position.copy(I);cr.quaternion.setFromUnitVectors(V(0,0,1),V(-Math.sin(th),0,Math.cos(th)));
+  // расчёт и плоский чертёж
+  const f=x=>x.toFixed(2),rows=[['R — радиус описанной окружности основания',m.R],['ρ — радиус вписанной окружности основания',m.rho],['l — апофема, √(h² + ρ²)',m.l],['r — радиус шара, ρh / (ρ + l)',m.r],['V — объём',m.vol],['S — площадь полной поверхности',m.Sf],['3V / S',3*m.vol/m.Sf],['h / r',m.h/m.r]];
+  $('calc').innerHTML=rows.map(w=>`<tr><td>${w[0]}</td><td>${f(w[1])}</td></tr>`).join('');
+  $('sec').innerHTML=secSVG(m);
+  document.querySelectorAll('input[data-p]').forEach(i=>{const s=S[i.dataset.p];i.value=s;i.nextElementSibling.textContent=i.dataset.p==='n'?s:f(s)});
+}
+
+// ---------- Шаги и переключатели ----------
+let st=0;
+const tg=$('tg');
+tg.innerHTML=EL.map(e=>`<label><input type="checkbox" data-k="${e[0]}"><i style="background:${e[1]}"></i>${e[2]}</label>`).join('');
+const cb=[...tg.querySelectorAll('input')],syn=()=>{$('sec').style.display=G.x.visible?'block':'none'};
+cb.forEach(i=>{i.onchange=()=>{G[i.dataset.k].visible=i.checked;syn()}});
+function go(k){st=Math.max(0,Math.min(ST.length-1,k));EL.forEach((e,i)=>{G[e[0]].visible=cb[i].checked=st>=e[3]});
+  $('hint').innerHTML=`<b>${ST[st][0]}.</b> ${ST[st][1]}`;$('sn').textContent=`Шаг ${st+1} из ${ST.length}`;$('pv').disabled=!st;$('nx').disabled=st===ST.length-1;syn()}
+$('pv').onclick=()=>go(st-1);$('nx').onclick=()=>go(st+1);
+addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='PageDown')go(st+1);if(e.key==='ArrowLeft'||e.key==='PageUp')go(st-1)});
+document.querySelectorAll('input[data-p]').forEach(i=>{i.oninput=()=>{S[i.dataset.p]=+i.value;build()}});
+$('reg').onclick=()=>{Object.assign(S,{n:3,a:6,h:6*Math.sqrt(2/3)});build()};
+if(matchMedia('(max-width:640px),(max-height:500px)').matches)document.querySelector('.panel').open=false;
+
+// ---------- Размер, ориентация, цикл ----------
+let wasPortrait=null;
+const fit=()=>{const w=el.clientWidth,H=el.clientHeight,portrait=w<H;
+  if(!w||!H)return;
+  renderer.setSize(w,H);camera.aspect=w/H;
+  if(portrait)camera.setViewOffset(w,H,0,H*.12,w,H);else camera.clearViewOffset();
+  camera.updateProjectionMatrix();
+  if(portrait!==wasPortrait){wasPortrait=portrait;
+    const vf=camera.fov*Math.PI/180,hf=2*Math.atan(Math.tan(vf/2)*camera.aspect);
+    camera.position.sub(ctl.target).setLength(2.5/Math.sin(Math.min(vf,hf)/2)).add(ctl.target)}};
+build();go(0);
+new ResizeObserver(fit).observe(el);fit();
+(function loop(){requestAnimationFrame(loop);ctl.update();renderer.render(scene,camera)})();
+})()}catch(e){document.getElementById('c').textContent='Не удалось запустить WebGL: '+e.message}
+</script>
+</body>
+</html>

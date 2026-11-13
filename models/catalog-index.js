@@ -10,6 +10,7 @@ export const CATEGORIES = [
   { id: 'sections', label: 'Сечения многогранников', subject: 'math' },
   { id: 'mechanics', label: 'Механика', subject: 'physics' },
   { id: 'thermo', label: 'МКТ и тепло', subject: 'physics' },
+  { id: 'electromagnetism', label: 'Электромагнетизм', subject: 'physics' },
   { id: 'waves', label: 'Колебания и волны', subject: 'physics' },
 ];
 
@@ -188,6 +189,20 @@ export const SCENE_INDEX = [
       <line x1="50" y1="16" x2="70" y2="66" stroke="currentColor"/>
       <circle cx="70" cy="66" r="7.5" fill="#fbbf24" stroke="none"/>
       <path d="M30 66 A38 38 0 0 0 70 66" stroke="#38bdf8" stroke-dasharray="3 2"/>
+    </svg>`,
+  },
+  {
+    id: 'salt-water-mhd', kind: 'simulation', subject: 'physics', category: 'electromagnetism',
+    title: 'Солёная вода в магнитном поле', shortTitle: 'Вращение солёной воды',
+    subtitle: 'Физика · ток, магнитное поле и сила Лоренца',
+    description: 'Блюдце, гвоздь и кольцо: переключение полярности, векторы тока, поля и силы, вращение с инерцией.',
+    tags: ['магнит', 'соль', 'вода', 'ток', 'лоренц', 'ампер', 'электромагнетизм'],
+    module: './physics/salt-water-mhd.js',
+    previewSvg: `<svg viewBox="0 0 100 100" width="96" height="96" fill="none" stroke="currentColor" stroke-width="2">
+      <ellipse cx="46" cy="53" rx="32" ry="20" fill="#22d3ee" fill-opacity=".15" stroke="#94a3b8"/>
+      <ellipse cx="46" cy="77" rx="23" ry="9" fill="#ef4444" fill-opacity=".5" stroke="#f87171"/>
+      <path d="M46 34V54" stroke="#cbd5e1" stroke-width="4"/><path d="M49 52H70L65 48M70 52L65 56" stroke="#fbbf24"/>
+      <path d="M25 50V24L21 30M25 24L29 30" stroke="#38bdf8"/><path d="M71 53L66 66L63 60M66 66L73 63" stroke="#fb7185"/>
     </svg>`,
   },
 ];

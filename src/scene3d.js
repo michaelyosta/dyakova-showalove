@@ -294,6 +294,7 @@ export function createSceneController({ THREE, el, geomApi }) {
   let activeFitRadius = 2.5;
   let wasPortrait = null;
   let buildHandles = null;
+  let modelMeta = null;
   let lastW = 0;
   let lastH = 0;
   let onRestoreCb = null;
@@ -327,6 +328,7 @@ export function createSceneController({ THREE, el, geomApi }) {
       delete groups[key];
     });
     buildHandles = null;
+    modelMeta = null;
     layers.forEach((layer) => {
       const g = new THREE.Group();
       scene.add(g);
@@ -338,6 +340,7 @@ export function createSceneController({ THREE, el, geomApi }) {
     Object.values(groups).forEach(geomApi.clearGroup);
     const meta = model.build(geomApi, { params, solved, groups, scene, simState, simTime }) || {};
     buildHandles = meta.handles || null;
+    modelMeta = meta;
     studio.applyModelMeta({
       ...meta,
       fitRadius: meta.fitRadius || model.cameraDefaults?.fitRadius || 2.5,
@@ -423,6 +426,7 @@ export function createSceneController({ THREE, el, geomApi }) {
   }
 
   return {
+    getModelMeta: () => modelMeta,
     scene,
     renderer,
     camera,

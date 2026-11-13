@@ -192,6 +192,14 @@ export default {
     const th = Math.PI / n;
     ring(G.x, m.r * k, 0x38bdf8, 0.012, { center: I, normal: V(-Math.sin(th), 0, Math.cos(th)) });
 
-    return { target: [0, m.h * k * 0.42, 0], fitRadius: 2.5, groundY: 0 };
+    return { target: [0, m.h * k * 0.42, 0], fitRadius: 2.5, groundY: 0,
+      measurement: { scale: 1 / k, unit: 'ед.', points: [
+        { name: 'S', position: Sv.toArray(), layer: 'f' }, { name: 'O', position: O.toArray(), layer: 'f' },
+        ...A.map((p, i) => ({ name: 'ABCDEFGH'[i], position: p.toArray(), layer: 'f' })),
+        ...M.map((p, i) => ({ name: `M${i + 1}`, position: p.toArray(), layer: 'a' })),
+        { name: 'I', position: I.toArray(), layer: 's' },
+        ...T.map((p, i) => ({ name: `T${i + 1}`, position: p.toArray(), layer: 't' })),
+      ] },
+    };
   },
 };

@@ -104,6 +104,7 @@ export function createPanelController({
       presetsHost.append(btn);
     });
 
+    calcEl.dataset.scene = model.id;
     calcEl.setAttribute('aria-label', model.calcAriaLabel || 'Расчёт параметров');
 
     (model.layers || []).forEach((layer, idx) => {
@@ -146,6 +147,7 @@ export function createPanelController({
     const svgHtml = model.renderDiagram ? model.renderDiagram(solved, params) : '';
     const layerOk = !model.diagramLayerKey || !!groups[model.diagramLayerKey]?.visible;
     if (svgHtml && layerOk) {
+      secEl.dataset.diagram = model.id;
       const aria = model.diagramAriaLabel || 'Плоский чертёж';
       if (secEl.getAttribute('aria-label') !== aria) secEl.setAttribute('aria-label', aria);
       if (svgHtml !== lastSvgHtml || !secEl.firstElementChild) {
@@ -187,9 +189,9 @@ export function createPanelController({
     if (stepsBar) stepsBar.hidden = isSim;
     if (playerBar) playerBar.hidden = !isSim;
     if (panelHelp) {
-      panelHelp.textContent = isSim
+      panelHelp.textContent = model.help || (isSim
         ? 'Вращение — перетаскиванием, масштаб — колесом или двумя пальцами. Пуск/пауза — Пробел, шаг — кнопками или стрелками.'
-        : 'Вращение — перетаскиванием, масштаб — колесом или двумя пальцами. Шаги — кнопками или стрелками на клавиатуре.';
+        : 'Вращение — перетаскиванием, масштаб — колесом или двумя пальцами. Шаги — кнопками или стрелками на клавиатуре.');
     }
   }
 

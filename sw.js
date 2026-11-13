@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-board-release-b2a529ceb3ed';
+const CACHE_NAME = 'teacher-board-release-instruments-mhd-v1';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const PRECACHE_URLS = [
   './vendor/lucide.min.js',
   './src/app.js',
   './src/board-view.js',
+  './src/teaching-tools.js',
   './src/dom-utils.js',
   './src/geom-helpers.js',
   './src/pdf-writer.js',
@@ -35,6 +36,7 @@ const PRECACHE_URLS = [
   './models/physics/impulse-explosion.js',
   './models/physics/gas-burner.js',
   './models/physics/water-waves.js',
+  './models/physics/salt-water-mhd.js',
   './models/physics/pendulum-oscillations.js',
 ];
 

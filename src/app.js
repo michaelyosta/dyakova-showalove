@@ -12,6 +12,7 @@ import {
 import { mergeParamsFor, sanitizeCamera } from './dom-utils.js';
 import { createGeomApi } from './geom-helpers.js';
 import * as scene3dMod from './scene3d.js';
+import { createTeachingTools } from './teaching-tools.js';
 import { createBoardView, REF_H } from './board-view.js';
 import { createPanelController } from './ui-panel.js';
 import { createCatalogUI } from './ui-catalog.js';
@@ -271,6 +272,14 @@ try {
     onViewChange: markDirty,
   });
 
+  const teachingTools = createTeachingTools({
+    root, el, camera: scene3d.camera, ctl: scene3d.ctl,
+    getMode: () => teacher.mode,
+    getMeta: scene3d.getModelMeta,
+    getGroups: () => scene3d.groups,
+    onActivate: () => { board.clearGesture(); markDirty(); },
+  });
+
   function fitAll() {
     scene3d.fit({
       mode: teacher.mode,
@@ -363,6 +372,7 @@ try {
 
     board.redrawInk();
     board.syncZoomUI();
+    teachingTools.sync();
     renderSnaps();
     markDirty();
   }
@@ -494,6 +504,7 @@ try {
 
   function rebuildCurrent() {
     if (!currentModel) return;
+    teachingTools.reset();
     if (isSimScene()) {
       solved = simRunner.updateParams(params);
       const info = simRunner.getState();
@@ -535,6 +546,7 @@ try {
     if (mySeq !== loadSeq) return null;
 
     const modelChanged = !currentModel || currentModel.id !== model.id || opts.forceSchema;
+    teachingTools.reset();
     currentModel = model;
 
     params = mergeParamsFor(model, opts.params);
@@ -612,6 +624,7 @@ try {
 
   function createSnap() {
     if (!currentModel) return null;
+    teachingTools.reset();
     saveNotes();
     pauseSimulationIfActive();
     scene3d.ctl.autoRotate = false;
@@ -659,6 +672,7 @@ try {
 
   function setMode(mode) {
     if (!currentModel) return;
+    teachingTools.reset();
     board.clearGesture();
     if (mode === 'model') {
       enterModel();
@@ -1151,6 +1165,7 @@ try {
   root.querySelectorAll('[data-tool]').forEach(
     (b) =>
       (b.onclick = () => {
+        teachingTools.reset();
         teacher.tool = b.dataset.tool;
         renderTeacher();
       })
@@ -1173,6 +1188,7 @@ try {
   };
   root.querySelector('[data-action=reset-camera]')?.addEventListener('click', () => {
     if (!currentModel || teacher.mode !== 'model') return;
+    teachingTools.reset();
     scene3d.resetCamera(currentModel, true);
     fitAll();
     schedulePersist();
@@ -1341,6 +1357,7 @@ try {
       syncChan?.close();
       storage?.dispose?.();
       exportEnv?.dispose?.();
+      teachingTools.dispose();
       scene3d.dispose();
       return;
     }
@@ -1372,6 +1389,8 @@ try {
         renderDirty = true;
       }
     }
+
+    teachingTools.tick(now);
 
     if (renderDirty) {
       scene3d.renderFrame(false);

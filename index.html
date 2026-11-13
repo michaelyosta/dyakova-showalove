@@ -55,6 +55,11 @@
       <button type="button" class="tb-zoom-value" data-action="zoom-reset" aria-label="Сбросить масштаб до 100%" disabled>100%</button>
       <button type="button" data-action="zoom-in" aria-label="Увеличить доску" disabled><i data-lucide="zoom-in" aria-hidden="true"></i></button>
     </div>
+    <div class="tb-instruments" role="group" aria-label="Измерительные приборы и указка">
+      <button type="button" data-instrument="ruler" aria-label="Линейка: расстояние между точками 3D-модели" title="Линейка · 2 точки модели" aria-pressed="false"><i data-lucide="ruler" aria-hidden="true"></i></button>
+      <button type="button" data-instrument="protractor" aria-label="Транспортир: угол по трём точкам 3D-модели" title="Транспортир · 3 точки, вторая — вершина" aria-pressed="false"><i data-lucide="triangle-right" aria-hidden="true"></i></button>
+      <button type="button" data-instrument="laser" aria-label="Лазерная указка" title="Лазерная указка · Esc — выход" aria-pressed="false"><i data-lucide="scan-line" aria-hidden="true"></i></button>
+    </div>
     <button type="button" class="tb-notes-button" data-action="notes" aria-pressed="false" aria-label="Заметки учителя" title="Заметки учителя"><i data-lucide="notebook-pen" aria-hidden="true"></i><span class="tb-btn-label">Заметки</span></button>
     <span class="tb-mode-status" aria-live="polite">Вращение и масштаб</span>
   </div>

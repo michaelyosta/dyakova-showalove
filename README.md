@@ -12,6 +12,10 @@ Actions, настройки — в Settings → Pages.
 `CNAME` задаёт адрес `dyakova.showalove.ru`; `.nojekyll` отключает обработку Jekyll.
 Сборка и установка зависимостей не требуются.
 
+DNS: `dyakova.showalove.ru` → CNAME `michaelyosta.github.io` (Cloudflare, DNS only).
+Сохраняйте файлы `CNAME` и `.nojekyll` при обновлении страницы.
+HTML опубликован без изменений относительно исходного файла.
+
 ## Локальный просмотр
 
 ```bash

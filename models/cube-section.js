@@ -276,6 +276,11 @@ export default {
     }
     polygon(G.x, secVerts, 0xfbbf24, 0.28, { roughness: 0.18, clearcoat: 0.6 });
 
-    return { target: [0, a * k * 0.5, 0], fitRadius: 2.4, groundY: 0 };
+    return { target: [0, a * k * 0.5, 0], fitRadius: 2.4, groundY: 0,
+      measurement: { scale: 1 / k, unit: 'ед.', points: [
+        ...[['A', A], ['B', B], ['C', C], ['D', D], ['A₁', A1], ['B₁', B1], ['C₁', C1], ['D₁', D1]].map(([name, p]) => ({ name, position: p.toArray(), layer: 'f' })),
+        ...[['P', P], ['Q', Q], ['R', R]].map(([name, p]) => ({ name, position: p.toArray(), layer: 'pts' })),
+      ] },
+    };
   },
 };

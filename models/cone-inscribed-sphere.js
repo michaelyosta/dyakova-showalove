@@ -177,6 +177,12 @@ export default {
     G.x.add(tri([Sv, B, A], 0xfbbf24, 0.22, { roughness: 0.18 }));
     ring(G.x, m.r * k, 0x38bdf8, 0.012, { center: I, normal: V(0, 0, 1) });
 
-    return { target: [0, m.h * k * 0.42, 0], fitRadius: 2.5, groundY: 0 };
+    return { target: [0, m.h * k * 0.42, 0], fitRadius: 2.5, groundY: 0,
+      measurement: { scale: 1 / k, unit: 'ед.', points: [
+        ...[['S', Sv], ['O', O], ['A', A], ['B', B]].map(([name, p]) => ({ name, position: p.toArray(), layer: 'f' })),
+        { name: 'I', position: I.toArray(), layer: 's' },
+        ...[['T₁', Ta], ['T₂', Tb]].map(([name, p]) => ({ name, position: p.toArray(), layer: 't' })),
+      ] },
+    };
   },
 };

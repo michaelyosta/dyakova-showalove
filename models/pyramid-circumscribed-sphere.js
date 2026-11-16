@@ -189,6 +189,12 @@ export default {
     ring(G.x, m.Rs * k, 0x38bdf8, 0.012, { center: Q, normal: V(0, 0, 1) });
 
     const midY = (Math.max(m.h, m.yQ + m.Rs * 0.4) + Math.min(0, m.yQ - m.Rs * 0.4)) * k * 0.45;
-    return { target: [0, midY, 0], fitRadius: 2.8, groundY: 0 };
+    return { target: [0, midY, 0], fitRadius: 2.8, groundY: 0,
+      measurement: { scale: 1 / k, unit: 'ед.', points: [
+        { name: 'S', position: Sv.toArray(), layer: 'f' }, { name: 'O', position: O.toArray(), layer: 'f' },
+        ...A.map((p, i) => ({ name: 'ABCDEFGH'[i], position: p.toArray(), layer: 'f' })),
+        { name: 'Q', position: Q.toArray(), layer: 's' }, { name: 'K', position: K.toArray(), layer: 'r' },
+      ] },
+    };
   },
 };

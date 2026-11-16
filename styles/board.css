@@ -2259,30 +2259,141 @@ body::-webkit-scrollbar-corner,
 #teacher-board-concept table[data-scene="salt-water-mhd"] td { width: 44%; overflow-wrap: anywhere; }
 #teacher-board-concept table[data-scene="salt-water-mhd"] td + td { width: 56%; white-space: normal; }
 
-/* Laboratory controls, live instruments and oscilloscopes. */
-#teacher-board-concept .tb-lab { flex: 0 1 auto; min-height: 140px; max-height: 47%; overflow: auto; padding: 12px 16px; border-top: 1px solid var(--tb-line); background: var(--tb-panel); font-size: 13px; line-height: 1.5; }
-#teacher-board-concept .tb-lab[hidden], #teacher-board-concept .tb-lab [hidden], #teacher-board-concept [data-param-row][hidden] { display: none; }
-#teacher-board-concept .tb-lab-modes, #teacher-board-concept .tb-lab-actions, #teacher-board-concept .tb-lab-navigation { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
-#teacher-board-concept .tb-lab button { min-height: 38px; padding: 6px 10px; font-size: 12px; }
-#teacher-board-concept .tb-lab button[aria-pressed="true"] { color: #7dd3fc; border-color: #38bdf8; background: #38bdf81a; }
-#teacher-board-concept .tb-lab p { margin: 5px 0 10px; }
-#teacher-board-concept .tb-lab-notice, #teacher-board-concept .tb-lab-footnote { color: var(--tb-fg-2); font-size: 12px; }
-#teacher-board-concept .tb-lab-readings { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; margin: 10px 0; }
-#teacher-board-concept .tb-lab-readings > div { padding: 8px; background: var(--tb-bg-deep); border: 1px solid var(--tb-line); border-radius: 8px; min-width: 0; }
-#teacher-board-concept .tb-lab-readings span, #teacher-board-concept .tb-lab-readings b { display: block; overflow-wrap: anywhere; }
-#teacher-board-concept .tb-lab-readings span { font-size: 11px; color: var(--tb-fg-2); }
-#teacher-board-concept .tb-lab-readings b { color: #fef3c7; font-size: 15px; font-variant-numeric: tabular-nums; }
-#teacher-board-concept .tb-lab-scope { width: 100%; overflow-x: auto; }
-#teacher-board-concept .tb-lab-scope svg { display: block; width: 100%; min-width: 420px; }
-#teacher-board-concept .tb-lab details { margin-top: 12px; }
-#teacher-board-concept .tb-lab fieldset { border: 1px solid var(--tb-line); border-radius: 8px; padding: 10px; margin: 12px 0; }
-#teacher-board-concept .tb-lab fieldset button { display: block; text-align: left; width: 100%; margin-top: 6px; }
-#teacher-board-concept .tb-param-number { grid-column: 1 / -1; width: 100%; box-sizing: border-box; padding: 6px 8px; border-radius: 6px; background: var(--tb-bg-deep); color: var(--tb-fg); border: 1px solid var(--tb-line-strong); font: inherit; }
-#teacher-board-concept table[data-scene="electromagnetic-induction"], #teacher-board-concept table[data-scene="transformer"] { table-layout: fixed; }
-#teacher-board-concept table[data-scene="electromagnetic-induction"] td, #teacher-board-concept table[data-scene="transformer"] td { width: 50%; white-space: normal; overflow-wrap: anywhere; }
-@media (max-width: 850px) { #teacher-board-concept .tb-lab-readings { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-@media (max-width: 570px) { #teacher-board-concept .tb-lab { flex: none; max-height: none; overflow: visible; padding: 12px; } #teacher-board-concept[data-lab]:not([data-lab=""]) .tb-scene-stage { min-height: 300px; height: 48dvh; } }
-#teacher-board-concept .tb-parameter:has(.tb-param-number) { display: grid; grid-template-columns: minmax(0,1fr) auto 70px; gap: 5px 8px; align-items: center; }
-#teacher-board-concept .tb-parameter:has(.tb-param-number) > span { grid-column: 1 / -1; }
-#teacher-board-concept .tb-parameter:has(.tb-param-number) > input[type="range"] { width: 100%; min-width: 0; margin: 0; }
-#teacher-board-concept .tb-parameter > .tb-param-number { grid-column: auto; min-width: 0; }
+/* Floating 3D laboratory stage controls (zero bottom drawer). */
+#teacher-board-concept [data-param-row][hidden],
+#teacher-board-concept .tb-lab-hud[hidden],
+#teacher-board-concept .tb-lab-quizbar[hidden],
+#teacher-board-concept .tb-lab-pill-group[hidden],
+#teacher-board-concept .tb-lab-scope-btn[hidden],
+#teacher-board-concept .tb-scope-float[hidden],
+#teacher-board-concept .tb-scope-warn[hidden],
+#teacher-board-concept .tb-panel-expand[hidden] { display: none; }
+
+#teacher-board-concept[data-mode="ink"] .tb-lab-hud,
+#teacher-board-concept[data-mode="ink"] .tb-lab-quizbar,
+#teacher-board-concept[data-mode="ink"] .tb-scope-float,
+#teacher-board-concept[data-mode="ink"] .tb-panel-expand { display: none; }
+
+#teacher-board-concept[data-lab]:has(.tb-lab-quizbar:not([hidden])) [data-ref="hint"] { display: none; }
+#teacher-board-concept[data-panel-collapsed="true"] .tb-instrument-panel { top: 48px; }
+#teacher-board-concept .tb-scene-column { position: relative; }
+
+#teacher-board-concept .tb-lab-hud {
+  position: absolute; top: 8px; right: 8px; z-index: 6;
+  display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 4px;
+  max-width: calc(100% - 16px); pointer-events: none;
+}
+#teacher-board-concept .tb-lab-pill-group {
+  display: inline-flex; flex-wrap: wrap; gap: 3px; pointer-events: auto;
+  padding: 2px; border-radius: 9px;
+  background: rgba(15, 23, 42, 0.84); border: 1px solid var(--tb-line-strong);
+  backdrop-filter: blur(8px);
+}
+#teacher-board-concept .tb-lab-hud button {
+  min-height: 27px; padding: 2px 7px; font-size: 11.5px; border-radius: 6px;
+  border: 1px solid transparent; background: transparent; color: var(--tb-fg);
+}
+#teacher-board-concept .tb-lab-hud .tb-lab-scope-btn,
+#teacher-board-concept .tb-lab-hud .tb-lab-reset {
+  pointer-events: auto; min-height: 31px; padding: 2px 9px; font-size: 11.5px; border-radius: 9px;
+  background: rgba(15, 23, 42, 0.84); border: 1px solid var(--tb-line-strong); backdrop-filter: blur(8px);
+}
+#teacher-board-concept .tb-lab-hud button[aria-pressed="true"],
+#teacher-board-concept .tb-lab-quizbar button[aria-pressed="true"] {
+  color: #7dd3fc; border-color: #38bdf8; background: rgba(56, 189, 248, 0.18);
+}
+
+#teacher-board-concept .tb-scope-float {
+  position: absolute; right: 10px; bottom: 10px; z-index: 6;
+  width: 272px; max-width: calc(100% - 20px);
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 6px 8px; border-radius: 11px;
+  background: rgba(11, 18, 33, 0.88); border: 1px solid var(--tb-line-strong);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42); backdrop-filter: blur(10px);
+}
+#teacher-board-concept .tb-scope-head {
+  display: flex; align-items: center; gap: 6px; min-height: 24px;
+}
+#teacher-board-concept .tb-scope-title {
+  font-size: 11.5px; font-weight: 600; color: var(--tb-fg); flex: 0 0 auto;
+}
+#teacher-board-concept .tb-scope-pills {
+  flex: 1 1 auto; min-width: 0; text-align: right;
+  font: 600 11px/1.2 var(--tb-mono); color: #7dd3fc;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#teacher-board-concept .tb-scope-close {
+  flex: 0 0 auto; min-height: 24px; min-width: 24px; padding: 0 6px;
+  border-radius: 6px; font-size: 13px; line-height: 1; color: var(--tb-fg-2);
+}
+#teacher-board-concept .tb-scope-warn {
+  padding: 3px 6px; border-radius: 6px;
+  background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(251, 191, 36, 0.35);
+  color: #fde68a; font-size: 10.5px; line-height: 1.25;
+}
+#teacher-board-concept .tb-scope-canvas {
+  display: block; width: 100%; height: auto; border-radius: 7px;
+}
+
+#teacher-board-concept .tb-lab-quizbar {
+  position: absolute; left: 10px; bottom: 10px; z-index: 6;
+  display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 12px;
+  background: rgba(15, 23, 42, 0.90); border: 1px solid var(--tb-line-strong);
+  backdrop-filter: blur(8px); max-width: calc(100% - 20px);
+}
+#teacher-board-concept .tb-lab-quizbar button { min-height: 34px; min-width: 38px; padding: 4px 10px; font-size: 13px; font-weight: 600; border-radius: 8px; }
+#teacher-board-concept .tb-lab-quiz-count { font-size: 12px; color: var(--tb-fg-2); white-space: nowrap; padding: 0 4px; }
+
+#teacher-board-concept .tb-panel-expand {
+  position: absolute; left: 10px; top: 8px; z-index: 6;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 10px;
+  font-size: 12px; font-weight: 500; border-radius: 9px;
+  background: rgba(20, 20, 21, 0.88); border: 1px solid var(--tb-line-strong);
+  color: var(--tb-fg); backdrop-filter: blur(8px);
+}
+
+#teacher-board-concept table[data-scene="electromagnetic-induction"],
+#teacher-board-concept table[data-scene="transformer"] { table-layout: fixed; }
+#teacher-board-concept table[data-scene="electromagnetic-induction"] td,
+#teacher-board-concept table[data-scene="transformer"] td { width: 50%; white-space: normal; overflow-wrap: anywhere; }
+
+#teacher-board-concept .tb-parameter:has(.tb-param-number) {
+  display: grid; grid-template-columns: minmax(0, 1fr) 74px; gap: 4px 8px; align-items: center; margin-top: 8px;
+}
+#teacher-board-concept .tb-parameter:has(.tb-param-number) > span { grid-column: 1; min-width: 0; }
+#teacher-board-concept .tb-parameter:has(.tb-param-number) > b { grid-column: 2; grid-row: 1; justify-self: end; min-width: 0; }
+#teacher-board-concept .tb-parameter:has(.tb-param-number) > input[type="range"] { grid-column: 1; grid-row: 2; width: 100%; min-width: 0; margin: 0; }
+#teacher-board-concept .tb-parameter:has(.tb-param-number) > .tb-param-number {
+  grid-column: 2; grid-row: 2; width: 100%; min-width: 0; box-sizing: border-box;
+  padding: 5px 8px; border-radius: 6px; background: var(--tb-bg-deep); color: var(--tb-fg);
+  border: 1px solid var(--tb-line-strong); font: inherit; font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 960px), (pointer: coarse) {
+  #teacher-board-concept .tb-lab-hud button,
+  #teacher-board-concept .tb-lab-hud .tb-lab-scope-btn,
+  #teacher-board-concept .tb-lab-hud .tb-lab-reset,
+  #teacher-board-concept .tb-lab-quizbar button,
+  #teacher-board-concept .tb-scope-close,
+  #teacher-board-concept .tb-panel-expand,
+  #teacher-board-concept .tb-parameter:has(.tb-param-number) > .tb-param-number { min-height: 44px; }
+  #teacher-board-concept .tb-lab-quizbar button,
+  #teacher-board-concept .tb-scope-close { min-width: 44px; }
+}
+
+@media (max-width: 570px) {
+  #teacher-board-concept .tb-lab-hud {
+    position: static; width: 100%; max-width: 100%; box-sizing: border-box;
+    flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch; touch-action: pan-x; scrollbar-width: none;
+    padding: 6px 8px; gap: 6px; pointer-events: auto;
+    background: var(--tb-bg-deep); border-bottom: 1px solid var(--tb-line);
+  }
+  #teacher-board-concept .tb-lab-hud::-webkit-scrollbar { display: none; }
+  #teacher-board-concept .tb-lab-hud .tb-lab-pill-group { flex: 0 0 auto; flex-wrap: nowrap; }
+  #teacher-board-concept .tb-lab-hud button { flex: 0 0 auto; white-space: nowrap; }
+  #teacher-board-concept .tb-panel-expand { left: auto; right: 8px; top: auto; bottom: 8px; }
+  #teacher-board-concept .tb-scope-float { right: 8px; bottom: 8px; width: calc(100% - 16px); max-width: 340px; }
+  #teacher-board-concept .tb-lab-quizbar { left: 50%; transform: translateX(-50%); bottom: 8px; }
+  #teacher-board-concept[data-lab]:not([data-lab=""]) .tb-scene-stage { min-height: 330px; height: 52dvh; max-height: 460px; }
+}

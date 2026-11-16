@@ -104,8 +104,17 @@ function darkenNeutralWireframesForLight(scene, geomApi) {
     '#ec4899': '#be185d',
     '#a855f7': '#7e22ce',
     '#c084fc': '#7e22ce',
+    '#fca5a5': '#b91c1c',
+    '#fed7aa': '#c2410c',
+    '#fdba74': '#c2410c',
+    '#c4b5fd': '#6d28d9',
+    '#e9d5ff': '#6d28d9',
+    '#a5f3fc': '#0284c7',
   };
   scene.traverse((obj) => {
+    if (typeof obj.userData?.onExportTheme === 'function') {
+      obj.userData.onExportTheme('light');
+    }
     const role = obj.userData?.exportTintRole;
     if (role === 'preserve') return;
     if (role === 'label' && obj.isSprite && geomApi?.setLabelAppearance) {

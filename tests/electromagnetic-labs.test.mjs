@@ -109,3 +109,38 @@ test('a stopped teaching frame aligns maximum flux with zero EMF, including real
   const loadFrame = transformerFrame({ ...tp, labMode: 'steps', lessonStep: 3 }, 0);
   assert(loadFrame.I1 > 0 && loadFrame.I2 > 0); assert(loadFrame.e2 > 0);
 });
+
+test('transformer demo stage pacing stays constant regardless of timeView slowdown or AC frequency', () => {
+  const slow0 = transformerFrame({ ...tp, labMode: 'demo', timeView: 'slow', frequency: 50 }, 0.01);
+  const slow1 = transformerFrame({ ...tp, labMode: 'demo', timeView: 'slow', frequency: 50 }, 0.05);
+  const real0 = transformerFrame({ ...tp, labMode: 'demo', timeView: 'real', frequency: 100 }, 1.0);
+  const real1 = transformerFrame({ ...tp, labMode: 'demo', timeView: 'real', frequency: 100 }, 5.0);
+  assert.equal(slow0.stage, 0);
+  assert.equal(slow1.stage, 2);
+  assert.equal(real0.stage, 0);
+  assert.equal(real1.stage, 2);
+});
+
+test('3D presentation labs expose slide camera cues, overlay scope, and toggleable controls', () => {
+  for (const model of [induction, transformer]) {
+    assert(model.lab.steps.length === 7);
+    assert(model.lab.questions.length === 3);
+    assert(model.lab.cameraViews?.apparatus?.position?.length === 3);
+    assert.equal(typeof model.getScopeOverlay, 'function');
+    for (let i = 0; i < 7; i++) {
+      const cam = model.lab.getSlideCamera({ ...tp, ...ip, labMode: 'steps' }, i);
+      assert(Array.isArray(cam.position) && cam.position.length === 3);
+      assert(Array.isArray(cam.target) && cam.target.length === 3);
+    }
+  }
+  const indOverlay = induction.getScopeOverlay(induction.solveState(induction.initState(ip), ip), ip);
+  assert.equal(indOverlay.scopes.length, 2);
+  const trOverlay = transformer.getScopeOverlay(transformer.evaluateAt(0.01, tp), tp);
+  assert.equal(trOverlay.scopes.length, 1);
+  const holdAct = induction.lab.actions({}, { ...ip, labMode: 'free', motion: 'move' })[0];
+  assert.equal(holdAct.patch().motion, 'hold');
+  const resumeAct = induction.lab.actions({}, { ...ip, labMode: 'free', motion: 'hold' })[0];
+  assert.equal(resumeAct.patch().motion, 'move');
+  const scaleAct = transformer.lab.actions({ dc: false }, { ...tp, labMode: 'free', scopeScale: 'auto' })[0];
+  assert.equal(scaleAct.patch(null, { scopeScale: 'auto' }).scopeScale, 'shared');
+});

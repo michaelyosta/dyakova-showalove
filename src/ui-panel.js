@@ -106,8 +106,17 @@ export function createPanelController({
           if (number.value !== '' && Number.isFinite(value) && value >= p.min && value <= p.max) onParamChange(p.key, value);
         };
         number.onchange = () => {
-          const value = Number(number.value);
-          if (number.value !== '' && Number.isFinite(value)) onParamChange(p.key, Math.max(p.min, Math.min(p.max, value)));
+          const raw = number.value.trim();
+          const value = Number(raw);
+          if (raw === '' || !Number.isFinite(value)) {
+            number.value = input.value;
+            return;
+          }
+          onParamChange(p.key, Math.max(p.min, Math.min(p.max, value)));
+          number.value = input.value;
+        };
+        number.onblur = () => {
+          if (number.value !== input.value) number.value = input.value;
         };
         label.append(number);
       }
@@ -167,8 +176,12 @@ export function createPanelController({
 
     syncDiagram(model, params, solved, groups);
     lab.sync(model, params, solved);
-    lessonFrozen = !!model.lab && params.labMode === 'steps';
-    for (const b of [simPlayBtn, simFwdBtn, simSpeedBtn]) if (b) b.disabled = lessonFrozen;
+    setBottomBarKind(model, params);
+    lessonFrozen = !!model.lab && (params.labMode === 'steps' || params.labMode === 'quiz');
+    if (model.lab && params.labMode === 'steps') {
+      updateSteps(model, params.lessonStep || 0, 'Слайд', true);
+    }
+    for (const b of [simPlayBtn, simFwdBtn, simSpeedBtn, simResetBtn]) if (b) b.disabled = lessonFrozen;
   }
 
   function syncDiagram(model, params, solved, groups) {
@@ -198,25 +211,28 @@ export function createPanelController({
     });
   }
 
-  function updateSteps(model, st) {
+  function updateSteps(model, st, noun = 'Шаг', titleOnly = false) {
     const steps = model.steps || [];
     const step = steps[st] || steps[0];
     hintEl.replaceChildren();
     if (step) {
       const strong = document.createElement('b');
-      strong.textContent = `${step.title}.`;
-      hintEl.append(strong, document.createTextNode(` ${step.text}`));
+      strong.textContent = titleOnly ? step.title : `${step.title}.`;
+      hintEl.append(strong);
+      if (!titleOnly && step.text) hintEl.append(document.createTextNode(` ${step.text}`));
     }
-    snEl.textContent = steps.length ? `Шаг ${st + 1} из ${steps.length}` : '';
+    snEl.textContent = steps.length ? `${noun} ${st + 1} из ${steps.length}` : '';
     pvEl.disabled = st <= 0;
     nxEl.disabled = st >= steps.length - 1;
   }
 
-  function setBottomBarKind(model) {
+  function setBottomBarKind(model, params = null) {
     const isSim = model?.kind === 'simulation';
+    const isPresentation = !!model?.lab && params?.labMode === 'steps';
+    const isQuiz = !!model?.lab && params?.labMode === 'quiz';
     labTime = !!model?.lab;
-    if (stepsBar) stepsBar.hidden = isSim;
-    if (playerBar) playerBar.hidden = !isSim;
+    if (stepsBar) stepsBar.hidden = (isSim && !isPresentation) || isQuiz;
+    if (playerBar) playerBar.hidden = !isSim || isPresentation || isQuiz;
     if (panelHelp) {
       panelHelp.textContent = model.help || (isSim
         ? 'Вращение — перетаскиванием, масштаб — колесом или двумя пальцами. Пуск/пауза — Пробел, шаг — кнопками или стрелками.'

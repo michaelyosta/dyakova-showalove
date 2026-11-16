@@ -194,6 +194,7 @@ export function createStudioEnvironment(THREE, scene, renderer) {
 
   function setTheme(nextTheme = 'dark') {
     theme = nextTheme === 'light' ? 'light' : 'dark';
+    scene.userData.tbTheme = theme;
     const p = STUDIO_LIGHT_PRESETS[theme];
     hemi.color.setHex(p.hemiSky);
     hemi.groundColor.setHex(p.hemiGround);
@@ -286,6 +287,7 @@ export function createSceneController({ THREE, el, geomApi }) {
   ctl.autoRotate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   ctl.addEventListener('start', () => {
     ctl.autoRotate = false;
+    cameraAnim = null;
   });
 
   const studio = createStudioEnvironment(THREE, scene, renderer);
@@ -299,6 +301,8 @@ export function createSceneController({ THREE, el, geomApi }) {
   let lastH = 0;
   let onRestoreCb = null;
   let onLostCb = null;
+  let cameraAnim = null;
+  let lastCamCueKey = '';
 
   function handleContextLost(e) {
     e.preventDefault();
@@ -360,6 +364,13 @@ export function createSceneController({ THREE, el, geomApi }) {
     }
   }
 
+  function tickVisual(model, dt, params, solved) {
+    if (typeof model?.tickVisual === 'function') {
+      return !!model.tickVisual(dt, { params, solved, groups, handles: buildHandles });
+    }
+    return false;
+  }
+
   function resetCamera(model, autoRotateIfAllowed = true) {
     const def = model.cameraDefaults || {};
     const pos = def.position || [5.4, 3.4, 5.6];
@@ -371,6 +382,8 @@ export function createSceneController({ THREE, el, geomApi }) {
     camera.clearViewOffset();
     activeFitRadius = def.fitRadius || 2.5;
     wasPortrait = null;
+    cameraAnim = null;
+    lastCamCueKey = '';
     if (autoRotateIfAllowed) {
       const wantsRotate = model.kind !== 'simulation' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       ctl.autoRotate = wantsRotate;
@@ -423,6 +436,91 @@ export function createSceneController({ THREE, el, geomApi }) {
     renderer.render(scene, camera);
   }
 
+  function resolveResponsiveCameraPos(posArr, tgtArr, fitPortrait = true) {
+    const pos = new THREE.Vector3(posArr[0], posArr[1], posArr[2]);
+    const tgt = new THREE.Vector3(tgtArr[0], tgtArr[1], tgtArr[2]);
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    if (fitPortrait && w > 0 && h > 0) {
+      const aspect = w / h;
+      if (aspect < 1.32) {
+        const scale = Math.min(1.85, 1.35 / Math.max(aspect, 0.48));
+        const offset = pos.clone().sub(tgt).multiplyScalar(scale);
+        pos.copy(tgt).add(offset);
+      }
+    }
+    return { pos, tgt };
+  }
+
+  function animateCameraTo(posArr, tgtArr, opts = {}) {
+    if (!Array.isArray(posArr) || !Array.isArray(tgtArr)) return false;
+    const cueKey = opts.key || `${posArr.join(',')}|${tgtArr.join(',')}`;
+    if (opts.dedupe && cueKey === lastCamCueKey) return false;
+    lastCamCueKey = cueKey;
+    const { pos, tgt } = resolveResponsiveCameraPos(posArr, tgtArr, opts.fitPortrait !== false);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dist = camera.position.distanceTo(pos) + ctl.target.distanceTo(tgt);
+    if (dist < 0.03) return false;
+    ctl.autoRotate = false;
+    if (reduced || opts.duration === 0) {
+      cameraAnim = null;
+      camera.position.copy(pos);
+      ctl.target.copy(tgt);
+      const d = ctl.enableDamping;
+      ctl.enableDamping = false;
+      ctl.update();
+      ctl.enableDamping = d;
+      return true;
+    }
+    cameraAnim = {
+      fromPos: camera.position.clone(),
+      toPos: pos,
+      fromTgt: ctl.target.clone(),
+      toTgt: tgt,
+      elapsed: 0,
+      duration: Math.max(0.18, opts.duration || 0.72),
+    };
+    return true;
+  }
+
+  function tickCamera(dt) {
+    if (!cameraAnim) return false;
+    cameraAnim.elapsed += Math.max(0, dt);
+    const u = Math.min(1, cameraAnim.elapsed / cameraAnim.duration);
+    const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    camera.position.lerpVectors(cameraAnim.fromPos, cameraAnim.toPos, e);
+    ctl.target.lerpVectors(cameraAnim.fromTgt, cameraAnim.toTgt, e);
+    const d = ctl.enableDamping;
+    ctl.enableDamping = false;
+    ctl.update();
+    ctl.enableDamping = d;
+    if (u >= 1) cameraAnim = null;
+    return true;
+  }
+
+  function pickInteractive(clientX, clientY) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const ndc = new THREE.Vector2(
+      ((clientX - rect.left) / rect.width) * 2 - 1,
+      -((clientY - rect.top) / rect.height) * 2 + 1
+    );
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(ndc, camera);
+    const targets = [];
+    const collect = (node) => {
+      if (!node.visible) return;
+      if (node.userData?.onCanvasClick) targets.push(node);
+      if (node.children) node.children.forEach(collect);
+    };
+    Object.values(groups).forEach(collect);
+    if (!targets.length) return null;
+    const hits = raycaster.intersectObjects(targets, false);
+    if (!hits.length) return null;
+    const hit = hits[0];
+    return hit.object.userData.onCanvasClick(hit.uv, hit) || null;
+  }
+
   function dispose() {
     renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
     renderer.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
@@ -445,9 +543,13 @@ export function createSceneController({ THREE, el, geomApi }) {
     setLayers,
     rebuild,
     updateDynamic,
+    tickVisual,
     resetCamera,
     fit,
     renderFrame,
+    animateCameraTo,
+    tickCamera,
+    pickInteractive,
     setContextHandlers,
     dispose,
   };

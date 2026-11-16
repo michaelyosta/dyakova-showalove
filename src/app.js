@@ -99,6 +99,8 @@ try {
   let renderDirty = true;
   let lastModelCamera = null;
   let exportEnv = null;
+  let userOrbited = false;
+  let lastLabStage = -1;
 
   let activeProject = null;
   let allProjects = [];
@@ -109,6 +111,10 @@ try {
   const markDirty = () => {
     renderDirty = true;
   };
+
+  scene3d.ctl.addEventListener('start', () => {
+    userOrbited = true;
+  });
 
   scene3d.ctl.addEventListener('change', () => {
     markDirty();
@@ -136,11 +142,16 @@ try {
     },
   });
 
+  const panelDetails = root.querySelector('.tb-panel');
+  const expandPanelBtn = root.querySelector('[data-action="expand-panel"]');
+
   function applyPanelCollapsed(collapsed, save = false) {
     if (save && savedPanelCollapsed === null) {
       savedPanelCollapsed = root.getAttribute('data-panel-collapsed') === 'true';
     }
     root.setAttribute('data-panel-collapsed', collapsed ? 'true' : 'false');
+    if (!collapsed && panelDetails) panelDetails.open = true;
+    if (expandPanelBtn) expandPanelBtn.hidden = !collapsed;
     const btn = root.querySelector('[data-action=toggle-panel]');
     if (btn) btn.setAttribute('aria-pressed', collapsed ? 'false' : 'true');
   }
@@ -408,10 +419,21 @@ try {
     board.clearGesture();
   }
 
+  function maybeFollowDemoCamera() {
+    if (currentModel?.lab && params.labMode === 'demo' && !userOrbited && typeof solved.stage === 'number' && solved.stage !== lastLabStage) {
+      lastLabStage = solved.stage;
+      const cam = currentModel.lab.getSlideCamera?.(params, solved.stage);
+      if (cam && scene3d.animateCameraTo(cam.position, cam.target, { key: `demo-${solved.stage}`, dedupe: true, fitPortrait: cam.fitPortrait })) {
+        markDirty();
+      }
+    }
+  }
+
   function syncDynamicFrame() {
     const info = simRunner.getState();
     solved = info.solved;
     scene3d.updateDynamic(currentModel, params, solved, info.simState, info.simTime);
+    maybeFollowDemoCamera();
     panel.syncPlayer(info);
     panel.syncValues(currentModel, params, solved, scene3d.groups);
     markDirty();
@@ -452,26 +474,20 @@ try {
     onStepGo: (deltaOrIndex, relative = false) => {
       if (!currentModel) return;
       beforeStateChange();
+      if (currentModel.lab && (params.labMode === 'steps' || params.labMode === 'quiz')) {
+        const cur = params.labMode === 'quiz' ? (params.quizIndex || 0) : (params.lessonStep || 0);
+        onLabAction({ type: params.labMode === 'quiz' ? 'quizNav' : 'step', delta: relative ? deltaOrIndex : deltaOrIndex - cur });
+        return;
+      }
       const target = relative ? st + deltaOrIndex : deltaOrIndex;
       goStep(target);
     },
-    onLabAction: ({ type, mode, delta, action }) => {
+    onLabAction: (ev) => {
       if (!currentModel?.lab) return;
-      beforeStateChange(); simRunner.pause();
-      if (type === 'defaults') params = mergeParamsFor(currentModel, {});
-      if (type === 'mode') params.labMode = mode;
-      if (type === 'step') params.lessonStep = Math.max(0, Math.min(currentModel.lab.steps.length - 1, params.lessonStep + delta));
-      if (type === 'custom') {
-        const def = currentModel.lab.actions?.find(a => a.id === action);
-        if (def) params = mergeParamsFor(currentModel, { ...params, ...def.patch(solved, params) });
-      }
-      rebuildCurrent();
-      if (type === 'defaults' || type === 'mode') simRunner.reset();
-      if (type === 'mode' && mode === 'demo') simRunner.play();
-      syncDynamicFrame(); schedulePersist();
+      onLabAction(ev);
     },
     onPlayerAction: ({ type, value }) => {
-      if (!isSimScene() || (currentModel.lab && params.labMode === 'steps' && type !== 'reset')) return;
+      if (!isSimScene() || (currentModel.lab && (params.labMode === 'steps' || params.labMode === 'quiz') && type !== 'reset')) return;
       if (teacher.mode === 'ink') beforeStateChange();
       else board.clearGesture();
 
@@ -516,6 +532,97 @@ try {
       }
     },
   });
+
+  function onLabAction({ type, mode, delta, action, qIndex, optIndex, view }) {
+    if (!currentModel?.lab) return;
+    beforeStateChange();
+    const lab = currentModel.lab;
+
+    if (type === 'cameraView') {
+      userOrbited = false;
+      const cam = lab.cameraViews?.[view];
+      if (cam) {
+        scene3d.animateCameraTo(cam.position, cam.target, { key: `view-${view}`, fitPortrait: cam.fitPortrait });
+        markDirty();
+      }
+      return;
+    }
+
+    if (type === 'defaults') {
+      simRunner.pause();
+      userOrbited = false;
+      lastLabStage = -1;
+      params = mergeParamsFor(currentModel, {});
+      rebuildCurrent();
+      simRunner.reset();
+      syncDynamicFrame();
+      const cam = lab.getSlideCamera?.(params, 0);
+      if (cam) scene3d.animateCameraTo(cam.position, cam.target, { key: 'defaults', dedupe: false, fitPortrait: cam.fitPortrait });
+      schedulePersist();
+      return;
+    }
+
+    if (type === 'mode') {
+      simRunner.pause();
+      userOrbited = false;
+      lastLabStage = -1;
+      params = mergeParamsFor(currentModel, { ...params, labMode: mode, ...(mode === 'quiz' ? { quizAnswer: -1 } : {}) });
+      if (mode === 'demo' || mode === 'steps') simRunner.reset();
+      solved = simRunner.updateParams(params);
+      if (mode === 'demo') simRunner.play();
+      syncDynamicFrame();
+      renderTeacher();
+      const cam = lab.getSlideCamera?.(params, params.lessonStep);
+      if (cam) scene3d.animateCameraTo(cam.position, cam.target, { key: `mode-${mode}-${params.lessonStep}`, dedupe: true, fitPortrait: cam.fitPortrait });
+      schedulePersist();
+      return;
+    }
+
+    if (type === 'step') {
+      simRunner.pause();
+      userOrbited = false;
+      const nextStep = Math.max(0, Math.min(lab.steps.length - 1, (params.lessonStep || 0) + delta));
+      params = mergeParamsFor(currentModel, { ...params, lessonStep: nextStep });
+      solved = simRunner.updateParams(params);
+      syncDynamicFrame();
+      const cam = lab.getSlideCamera?.(params, nextStep);
+      if (cam) scene3d.animateCameraTo(cam.position, cam.target, { key: `step-${nextStep}`, dedupe: true, fitPortrait: cam.fitPortrait });
+      schedulePersist();
+      return;
+    }
+
+    if (type === 'quizNav') {
+      simRunner.pause();
+      userOrbited = false;
+      const maxQ = Math.max(0, (lab.questions?.length || 1) - 1);
+      const nextQ = Math.max(0, Math.min(maxQ, (params.quizIndex || 0) + delta));
+      params = mergeParamsFor(currentModel, { ...params, quizIndex: nextQ, quizAnswer: -1 });
+      solved = simRunner.updateParams(params);
+      syncDynamicFrame();
+      schedulePersist();
+      return;
+    }
+
+    if (type === 'quizAnswer') {
+      simRunner.pause();
+      const qi = typeof qIndex === 'number' ? qIndex : (params.quizIndex || 0);
+      params = mergeParamsFor(currentModel, { ...params, quizIndex: qi, quizAnswer: optIndex });
+      solved = simRunner.updateParams(params);
+      syncDynamicFrame();
+      schedulePersist();
+      return;
+    }
+
+    if (type === 'custom') {
+      const defs = typeof lab.actions === 'function' ? lab.actions(solved, params) : (lab.actions || []);
+      const def = defs.find((a) => a.id === action);
+      if (!def) return;
+      params = mergeParamsFor(currentModel, { ...params, ...def.patch(solved, params) });
+      solved = simRunner.updateParams(params);
+      syncDynamicFrame();
+      schedulePersist();
+    }
+  }
 
   function rebuildCurrent() {
     if (!currentModel) return;
@@ -582,9 +689,9 @@ try {
     if (modelChanged) {
       scene3d.setLayers(model.layers);
       panel.renderModelSchema(model, params, visible);
-      panel.setBottomBarKind(model);
+      panel.setBottomBarKind(model, params);
     } else {
-      panel.setBottomBarKind(model);
+      panel.setBottomBarKind(model, params);
       panel.syncLayers(visible);
     }
 
@@ -593,6 +700,8 @@ try {
     });
 
     if (opts.resetCam !== false) {
+      userOrbited = false;
+      lastLabStage = -1;
       scene3d.resetCamera(model, true);
     }
 
@@ -1222,6 +1331,39 @@ try {
       fitAll();
     };
   }
+  if (expandPanelBtn) {
+    expandPanelBtn.onclick = () => {
+      applyPanelCollapsed(false, false);
+      fitAll();
+    };
+  }
+  if (panelDetails) {
+    panelDetails.addEventListener('toggle', () => {
+      if (!panelDetails.open && window.innerWidth > 570 && root.getAttribute('data-panel-collapsed') !== 'true') {
+        applyPanelCollapsed(true, false);
+        fitAll();
+      }
+    });
+  }
+
+  let clickOrigin = null;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.isPrimary && e.button === 0 && teacher.mode === 'model') {
+      clickOrigin = [e.clientX, e.clientY];
+    }
+  });
+  el.addEventListener('pointerup', (e) => {
+    if (!clickOrigin || !e.isPrimary || e.button !== 0 || teacher.mode !== 'model') {
+      clickOrigin = null;
+      return;
+    }
+    const dist = Math.hypot(e.clientX - clickOrigin[0], e.clientY - clickOrigin[1]);
+    clickOrigin = null;
+    if (dist < 6 && currentModel?.lab) {
+      const act = scene3d.pickInteractive(e.clientX, e.clientY);
+      if (act) onLabAction(act);
+    }
+  });
   const snapsToggle = root.querySelector('[data-action=toggle-snaps]');
   if (snapsToggle) {
     snapsToggle.onclick = () => {
@@ -1272,7 +1414,18 @@ try {
       return;
     }
     if (isSimScene()) {
-      if (currentModel.lab && params.labMode === 'steps') return;
+      if (currentModel.lab && (params.labMode === 'steps' || params.labMode === 'quiz')) {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+          e.preventDefault();
+          beforeStateChange();
+          onLabAction({ type: params.labMode === 'quiz' ? 'quizNav' : 'step', delta: 1 });
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          e.preventDefault();
+          beforeStateChange();
+          onLabAction({ type: params.labMode === 'quiz' ? 'quizNav' : 'step', delta: -1 });
+        }
+        return;
+      }
       if (e.code === 'Space' && !e.target.matches('button,a')) {
         e.preventDefault();
         if (teacher.mode === 'ink') enterModel();
@@ -1388,6 +1541,7 @@ try {
         const info = simRunner.getState();
         solved = info.solved;
         scene3d.updateDynamic(currentModel, params, solved, info.simState, info.simTime);
+        maybeFollowDemoCamera();
         panel.syncPlayer(info);
         if (!info.playing || now - lastUiSyncTs >= 65) {
           lastUiSyncTs = now;
@@ -1396,6 +1550,15 @@ try {
         if (!info.playing) {
           persistNow();
         }
+        renderDirty = true;
+      }
+    }
+
+    if (currentModel && teacher.mode === 'model') {
+      if (scene3d.tickVisual(currentModel, dt, params, solved)) {
+        renderDirty = true;
+      }
+      if (scene3d.tickCamera(dt)) {
         renderDirty = true;
       }
     }

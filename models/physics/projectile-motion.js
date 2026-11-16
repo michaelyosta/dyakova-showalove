@@ -191,8 +191,8 @@ export default {
       `<path d="${fullD}" fill="none" stroke="#38bdf8" stroke-opacity=".42" stroke-width="2" stroke-dasharray="4 3"/>` +
       `<path d="${doneD}" fill="none" stroke="#f59e0b" stroke-width="2.8" stroke-linecap="round"/>` +
       `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="4.5" fill="#f59e0b"/>` +
-      `<text x="16" y="168" font-size="10.5" font-weight="600" fill="#3b82f6">Ek</text><rect x="38" y="160" width="${wK.toFixed(1)}" height="8" rx="2" fill="#3b82f6"/>` +
-      `<text x="16" y="184" font-size="10.5" font-weight="600" fill="#22c55e">Ep</text><rect x="38" y="176" width="${wP.toFixed(1)}" height="8" rx="2" fill="#22c55e"/>` +
+      `<text x="16" y="168" font-size="11.5" font-weight="600" fill="#3b82f6">Ek</text><rect x="38" y="160" width="${wK.toFixed(1)}" height="8" rx="2" fill="#3b82f6"/>` +
+      `<text x="16" y="184" font-size="11.5" font-weight="600" fill="#22c55e">Ep</text><rect x="38" y="176" width="${wP.toFixed(1)}" height="8" rx="2" fill="#22c55e"/>` +
       '</svg>'
     );
   },
@@ -209,15 +209,16 @@ export default {
     // Лабораторная разгонная платформа и мерная рейка
     const pw = Math.max(2.3, m.range * kScale * 0.65);
     const pd = 1.25;
-    studioBox(G.env, pw * 2, 0.05, pd * 2, [0, -0.025, 0], 0x1e293b, {
-      metalness: 0.35,
-      roughness: 0.5,
-      edgeColor: 0x475569,
+    studioBox(G.env, pw * 2, 0.05, pd * 2, [0, -0.025, 0], 0x05080f, {
+      metalness: 0.05,
+      roughness: 0.9,
+      envMapIntensity: 0.14,
+      edgeColor: 0x334155,
       edgeOpacity: 0.5,
     });
-    seg(G.env, V(-pw, 0.002, 0), V(pw, 0.002, 0), 0.011, 0x94a3b8);
+    seg(G.env, V(-pw, 0.002, 0), V(pw, 0.002, 0), 0.011, 0x94a3b8, { emissiveIntensity: 0.05 });
     for (let x = -Math.floor(pw * 2) / 2; x <= pw; x += 0.5) {
-      seg(G.env, V(x, 0.002, -pd), V(x, 0.002, pd), 0.005, 0x475569);
+      seg(G.env, V(x, 0.002, -pd), V(x, 0.002, pd), 0.005, 0x334155, { emissiveIntensity: 0.03 });
     }
     if (m.h0 > 0.05) {
       const hPhys = m.h0 * kScale;
@@ -233,7 +234,7 @@ export default {
     }
 
     // Полная расчётная траектория
-    const fullTrail = trail(G.full, m.fullPts.length, 0x38bdf8, 0.52);
+    const fullTrail = trail(G.full, m.fullPts.length, 0x38bdf8, 0.72);
     updateTrail(fullTrail, m.fullPts.map(([x, y]) => mapPt(x, y)));
 
     // Динамический след, проекция высоты на землю и снаряд

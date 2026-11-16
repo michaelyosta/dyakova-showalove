@@ -157,7 +157,7 @@ export default {
     });
     dot(G.f, Sv, 0xe2e8f0, 0.04, { role: 'wireframe' });
     label('S', Sv.clone().add(V(0, 0.26, 0)), G.f);
-    label('O', O.clone().add(V(-0.16, -0.24, -0.16)), G.f);
+    label('O', O.clone().add(V(-0.28, -0.14, 0.24)), G.f);
     G.f.add(tri(pts, 0x7dd3fc, 0.09, { roughness: 0.14, clearcoat: 0.78 }));
 
     ring(G.cc, m.R * k, 0xa855f7, 0.013);
@@ -165,18 +165,18 @@ export default {
     A.forEach((p) => seg(G.cc, O, p, 0.02, 0xa855f7));
     M.forEach((p) => seg(G.ic, O, p, 0.02, 0xec4899));
     label('R', mid(O, A[0]).add(V(0, 0.17, 0)), G.cc);
-    label('ρ', mid(O, M[0]).add(V(0, 0.17, 0)), G.ic);
+    label('ρ', mid(O, M[0]).add(V(0.26, -0.12, -0.16)), G.ic);
 
     seg(G.h, Sv, O, 0.028, 0xef4444);
     rightAngleMark(G.h, O, Sv.clone().sub(O), M[0].clone().sub(O), 0.16, 0xef4444, 0.009);
-    label('h', mid(Sv, I).add(V(0.24, 0.04, 0.22)), G.h, { color: '#f87171' });
+    label('h', mid(Sv, I).add(V(-0.18, 0.08, 0.22)), G.h, { color: '#f87171' });
 
     M.forEach((p) => seg(G.a, Sv, p, 0.022, 0x3b82f6));
-    label('l', mid(Sv, M[0]).add(V(0.22, 0.1, 0.2)), G.a, { color: '#93c5fd' });
+    label('l', Sv.clone().lerp(M[0], 0.42).add(V(0.26, 0.12, -0.18)), G.a, { color: '#93c5fd' });
 
     sphere(G.s, I, m.r * k, 0x38bdf8, 0.28, { roughness: 0.1, clearcoat: 0.94 });
     ring(G.s, m.r * k, 0x7dd3fc, 0.008, { center: I, opacity: 0.42 });
-    label('I', I.clone().add(V(-0.24, 0.06, -0.22)), G.s, { color: '#7dd3fc' });
+    label('I', I.clone().add(V(-0.30, 0.04, 0.26)), G.s, { color: '#7dd3fc' });
 
     T.forEach((p) => {
       seg(G.r, I, p, 0.022, 0x22c55e);
@@ -185,8 +185,9 @@ export default {
     rightAngleMark(G.r, T[0], I.clone().sub(T[0]), Sv.clone().sub(M[0]), 0.14, 0x22c55e, 0.009);
     dot(G.t, O, 0xf59e0b, 0.068);
     dot(G.r, I, 0x22c55e, 0.052);
-    label('r', mid(I, T[0]).add(V(0, 0.18, 0)), G.r, { color: '#6ee7b7' });
-    label('T', T[0].clone().add(T[0].clone().sub(I).normalize().multiplyScalar(0.26)), G.t, { color: '#fbbf24' });
+    const tLabelPt = T[1] || T[0];
+    label('r', mid(I, T[0]).add(V(0.20, 0.12, -0.02)), G.r, { color: '#6ee7b7' });
+    label('T', tLabelPt.clone().add(tLabelPt.clone().sub(I).normalize().multiplyScalar(0.28)), G.t, { color: '#fbbf24' });
 
     G.x.add(tri([Sv, O, M[0]], 0xfbbf24, 0.24, { roughness: 0.18 }));
     const th = Math.PI / n;

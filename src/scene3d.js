@@ -267,7 +267,7 @@ export function createStudioEnvironment(THREE, scene, renderer) {
 
 export function createSceneController({ THREE, el, geomApi }) {
   const scene = new THREE.Scene();
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   configureRenderer(THREE, renderer);
   renderer.domElement.id = 'scene-canvas';
@@ -399,12 +399,20 @@ export function createSceneController({ THREE, el, geomApi }) {
       if (portrait !== wasPortrait) {
         const vf = (camera.fov * Math.PI) / 180;
         const hf = 2 * Math.atan(Math.tan(vf / 2) * camera.aspect);
+        const effFov = Math.max(vf * 0.72, Math.min(vf, hf));
         const radius = activeFitRadius || 2.5;
-        camera.position.sub(ctl.target).setLength(radius / Math.sin(Math.min(vf, hf) / 2)).add(ctl.target);
+        camera.position.sub(ctl.target).setLength(radius / Math.sin(effFov / 2)).add(ctl.target);
+        const damping = ctl.enableDamping;
+        ctl.enableDamping = false;
+        ctl.update();
+        ctl.enableDamping = damping;
       }
     }
     wasPortrait = portrait;
     redrawInk();
+    if (w > 0 && H > 0) {
+      renderer.render(scene, camera);
+    }
   }
 
   function renderFrame(isModelMode) {

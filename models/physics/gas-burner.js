@@ -347,11 +347,11 @@ export default {
     ring(G.flame, 0.21, 0xf97316, 0.014, { center: [0, benchY + 0.355, 0], opacity: 0.85, role: 'preserve' });
 
     const flameCore = new THREE.Mesh(
-      new THREE.ConeGeometry(0.16, 0.30, 24),
+      new THREE.ConeGeometry(0.13, 0.30, 24),
       new THREE.MeshBasicMaterial({
         color: 0x0ea5e9,
         transparent: true,
-        opacity: 0.52,
+        opacity: 0.56,
         depthWrite: false,
         toneMapped: false,
       })
@@ -401,14 +401,14 @@ export default {
       if (flameCore) {
         flameCore.visible = true;
         const hScale = 0.28 + 0.84 * heatNorm;
-        const rScale = 0.62 + 0.45 * heatNorm;
+        const rScale = 0.55 + 0.38 * heatNorm;
         flameCore.scale.set(rScale, hScale, rScale);
         flameCore.position.set(0, baseFlameY + 0.15 * hScale, 0);
       }
       updateInstanced(flameMesh, FLAME_COUNT, (i) => {
         const life = (i / FLAME_COUNT + m.t * (1.25 + heatNorm * 1.65)) % 1;
         const ang = i * 2.39996;
-        const spread = (1 - life * 0.72) * 0.25 * (0.45 + heatNorm);
+        const spread = (life < 0.25 ? 0.12 : (1 - life * 0.72) * 0.22) * (0.45 + heatNorm);
         return {
           x: Math.cos(ang + m.t * 2.2) * spread,
           y: baseFlameY + life * (0.22 + heatNorm * 0.15),

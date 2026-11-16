@@ -156,7 +156,7 @@ export default {
 
     seg(G.gen, Sv, A, 0.022, 0x3b82f6);
     seg(G.gen, Sv, B, 0.022, 0x3b82f6);
-    label('l', mid(Sv, A).add(V(0.2, 0.12, 0)), G.gen, { color: '#93c5fd' });
+    label('l', mid(Sv, B).add(V(-0.26, 0.12, 0)), G.gen, { color: '#93c5fd' });
 
     sphere(G.s, I, m.r * k, 0x38bdf8, 0.28, { roughness: 0.1, clearcoat: 0.94 });
     ring(G.s, m.r * k, 0x7dd3fc, 0.008, { center: I, opacity: 0.4 });

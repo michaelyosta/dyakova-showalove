@@ -228,8 +228,8 @@ export default {
   renderDiagram(m) {
     // 2D-диаграмма векторов импульсов осколков, их суммы Σp и исходного импульса p0
     const scale = 54 / Math.max(8, m.pExpMag, ...m.fragResults.map((f) => Math.hypot(f.m * f.vel[0], f.m * f.vel[1])));
-    const ox = 50;
-    const oy = 114;
+    const ox = 58;
+    const oy = 102;
     const vecArrow = (x1, y1, x2, y2, col, w = 2.6, dash = '') => {
       const dx = x2 - x1;
       const dy = y2 - y1;
@@ -263,20 +263,25 @@ export default {
     const p0y = oy - m.pBefore[1] * scale;
     const sumX = ox + m.sumP[0] * scale;
     const sumY = oy - m.sumP[1] * scale;
+    const line1 = m.exploded
+      ? m.allInAir
+        ? 'p₀(tвзр) — пунктир'
+        : 'Осколки упали'
+      : 'До разрыва:';
+    const line2 = m.exploded
+      ? m.allInAir
+        ? 'Σpᵢ(t) меняется под g'
+        : 'импульс передан земле'
+      : 'целое тело M · p = Mv';
     return (
       `<svg role="img" aria-label="Векторы импульсов" viewBox="0 0 200 200" style="display:block;width:100%;height:auto">` +
-      `<line x1="14" y1="164" x2="186" y2="164" stroke="currentColor" stroke-opacity=".3" stroke-width="1.2"/>` +
+      `<line x1="14" y1="154" x2="186" y2="154" stroke="currentColor" stroke-opacity=".3" stroke-width="1.2"/>` +
       vecArrow(ox, oy, p0x, p0y, '#eab308', 2.0, '4 3') +
       (m.exploded ? vecArrow(ox, oy, sumX, sumY, '#fbbf24', 1.8) : '') +
       arrows +
       `<circle cx="${ox}" cy="${oy}" r="4" fill="#ef4444"/>` +
-      `<text x="16" y="184" font-size="10.2" fill="currentColor">${
-        m.exploded
-          ? m.allInAir
-            ? 'p₀(tвзр) — пунктир · Σpᵢ(t) меняется под g'
-            : 'Осколки упали · импульс передан земле'
-          : 'До разрыва: целое тело M'
-      }</text>` +
+      `<text x="100" y="174" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".88">${line1}</text>` +
+      `<text x="100" y="189" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".78">${line2}</text>` +
       '</svg>'
     );
   },
@@ -292,15 +297,16 @@ export default {
 
     const pw = Math.max(2.4, spanX * kScale * 0.65);
     const pd = Math.max(1.4, m.maxAbsZ * kScale * 1.1);
-    studioBox(G.env, pw * 2, 0.05, pd * 2, [0, -0.025, 0], 0x1e293b, {
-      metalness: 0.35,
-      roughness: 0.5,
-      edgeColor: 0x475569,
+    studioBox(G.env, pw * 2, 0.05, pd * 2, [0, -0.025, 0], 0x05080f, {
+      metalness: 0.05,
+      roughness: 0.9,
+      envMapIntensity: 0.14,
+      edgeColor: 0x334155,
       edgeOpacity: 0.5,
     });
-    seg(G.env, V(-pw, 0.002, 0), V(pw, 0.002, 0), 0.01, 0x64748b);
+    seg(G.env, V(-pw, 0.002, 0), V(pw, 0.002, 0), 0.01, 0x64748b, { emissiveIntensity: 0.04 });
 
-    const cmTrail = trail(G.env, m.cmTraj.length, 0x9aa2b1, 0.48);
+    const cmTrail = trail(G.env, m.cmTraj.length, 0xcbd5e1, 0.68);
     updateTrail(cmTrail, m.cmTraj.map(mapV));
     const cmDot = dot(G.env, mapV(m.cmPos), 0xeab308, 0.056, { opacity: 0.85 });
     dot(G.env, mapV([m.xExp, m.yExp, 0]), 0xef4444, 0.048);
@@ -311,21 +317,21 @@ export default {
       clearcoat: 0.9,
       role: 'preserve',
     });
-    const shockSphere = sphere(G.body, mapV([m.xExp, m.yExp, 0]), 0.5, 0xfef08a, 0.28, {
+    const shockSphere = sphere(G.body, mapV([m.xExp, m.yExp, 0]), 0.5, 0xfef08a, 0.34, {
       roughness: 0.25,
       role: 'preserve',
     });
     shockSphere.visible = false;
-    const shockRing = ring(G.body, 0.5, 0xf97316, 0.018, {
+    const shockRing = ring(G.body, 0.5, 0xf97316, 0.026, {
       center: mapV([m.xExp, m.yExp, 0]),
-      opacity: 0.7,
+      opacity: 0.85,
       role: 'preserve',
     });
     if (shockRing) shockRing.visible = false;
 
     const fragMeshes = m.fragResults.map((f) => ({
       mesh: dot(G.body, mapV(f.pos), f.col, 0.068 + f.m * 0.01, { role: 'preserve', metalness: 0.25, roughness: 0.2 }),
-      trail: trail(G.body, 28, f.col, 0.88),
+      trail: trail(G.body, 28, f.col, 0.94),
       arrow: arrow(G.vec, f.col, 0.018, 0.05, 0.14),
     }));
     const totalPArrow = arrow(G.vec, 0xf59e0b, 0.02, 0.055, 0.16);
@@ -371,11 +377,11 @@ export default {
       const sc = 0.18 + u * 1.45;
       shockSphere.visible = true;
       shockSphere.scale.setScalar(sc);
-      shockSphere.material.opacity = (1 - u) * 0.36;
+      shockSphere.material.opacity = (1 - u) * 0.44;
       if (shockRing) {
         shockRing.visible = true;
         shockRing.scale.setScalar(sc * 1.18);
-        shockRing.material.opacity = (1 - u) * 0.78;
+        shockRing.material.opacity = (1 - u) * 0.9;
       }
     } else {
       shockSphere.visible = false;

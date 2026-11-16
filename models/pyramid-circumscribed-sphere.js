@@ -165,7 +165,7 @@ export default {
 
     ring(G.cc, m.R * k, 0xa855f7, 0.014);
     seg(G.cc, O, A[0], 0.02, 0xa855f7);
-    label('R', mid(O, A[0]).add(V(0, 0.15, 0)), G.cc);
+    label('R', O.clone().lerp(A[0], 0.68).add(V(0.16, -0.14, 0.14)), G.cc);
 
     seg(G.h, Sv, O, 0.028, 0xef4444);
     rightAngleMark(G.h, O, Sv.clone().sub(O), A[0].clone().sub(O), 0.16, 0xef4444, 0.009);
@@ -182,7 +182,7 @@ export default {
     dashedSeg(G.r, Q, K, 0.017, 0xf59e0b, 0.09, 0.06);
     rightAngleMark(G.r, K, Q.clone().sub(K), Sv.clone().sub(A[0]), 0.14, 0xf59e0b, 0.009);
     dot(G.r, K, 0xf59e0b, 0.052);
-    label('Rш', mid(Q, A[0]).add(V(0, 0.18, 0)), G.r, { color: '#6ee7b7' });
+    label('Rш', Q.clone().lerp(A[0], 0.52).add(V(-0.16, 0.0, 0.20)), G.r, { color: '#6ee7b7' });
     label('K', K.clone().add(V(0.2, 0.12, 0.14)), G.r, { color: '#fbbf24' });
 
     G.x.add(tri([Sv, O, A[0]], 0xfbbf24, 0.24, { roughness: 0.18 }));

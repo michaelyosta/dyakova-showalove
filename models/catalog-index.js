@@ -11,6 +11,7 @@ export const CATEGORIES = [
   { id: 'mechanics', label: 'Механика', subject: 'physics' },
   { id: 'thermo', label: 'МКТ и тепло', subject: 'physics' },
   { id: 'waves', label: 'Колебания и волны', subject: 'physics' },
+  { id: 'nuclear', label: 'Ядерная физика', subject: 'physics' },
 ];
 
 export const SCENE_INDEX = [
@@ -188,6 +189,29 @@ export const SCENE_INDEX = [
       <line x1="50" y1="16" x2="70" y2="66" stroke="currentColor"/>
       <circle cx="70" cy="66" r="7.5" fill="#fbbf24" stroke="none"/>
       <path d="M30 66 A38 38 0 0 0 70 66" stroke="#38bdf8" stroke-dasharray="3 2"/>
+    </svg>`,
+  },
+  {
+    id: 'radioactive-decay',
+    kind: 'simulation',
+    subject: 'physics',
+    category: 'nuclear',
+    title: 'Радиоактивный распад: α-, β- и γ-излучение',
+    shortTitle: 'Распад · α, β и γ',
+    subtitle: 'Физика · атомное ядро',
+    description: 'Модели α-, β- и γ-распада, сравнение 3 лучей в магните N/S, превращения U→Th, C→N, Ni*→Ni и каскад Бумага→Al→Pb.',
+    tags: ['радиоактивность', 'альфа', 'бета', 'гамма', 'ядро', 'изотоп', 'уран', 'радий', 'физика', 'егэ'],
+    module: './physics/radioactive-decay.js',
+    previewSvg: `<svg viewBox="0 0 100 100" width="96" height="96" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="30" cy="54" r="14" fill="rgba(239,68,68,0.22)" stroke="#f87171"/>
+      <circle cx="26" cy="50" r="3.5" fill="#ef4444" stroke="none"/>
+      <circle cx="34" cy="58" r="3.5" fill="#38bdf8" stroke="none"/>
+      <circle cx="34" cy="49" r="3.2" fill="#38bdf8" stroke="none"/>
+      <path d="M44 48 Q64 34 84 26" stroke="#fbbf24" stroke-width="2.2"/>
+      <circle cx="84" cy="26" r="4" fill="#fbbf24" stroke="none"/>
+      <path d="M45 54 Q52 49 58 54 T72 54 T86 54" stroke="#c084fc" stroke-width="2.2"/>
+      <path d="M44 60 Q64 74 84 82" stroke="#38bdf8" stroke-dasharray="3 2" stroke-width="2"/>
+      <circle cx="84" cy="82" r="3" fill="#38bdf8" stroke="none"/>
     </svg>`,
   },
 ];

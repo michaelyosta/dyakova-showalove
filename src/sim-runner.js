@@ -54,7 +54,7 @@ export function createSimRunner() {
     speed = opts.speed ?? def.playback?.defaultSpeed ?? 1;
     seed = opts.seed ?? 1337;
     rng = mulberry32(seed);
-    const targetT = typeof opts.simTime === 'number' ? opts.simTime : 0;
+    const targetT = typeof opts.simTime === 'number' ? opts.simTime : (def.playback?.initialTime ?? 0);
 
     if (typeof def.initState === 'function') {
       simState = def.initState(params, rng);

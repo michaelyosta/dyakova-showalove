@@ -64,39 +64,47 @@ export function createGeomApi(THREE) {
         }
       }
       const c = document.createElement('canvas');
-      c.width = c.height = 256;
+      const mCtx = c.getContext('2d');
+      let fontSize = 84;
+      mCtx.font = `700 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+      const rawW = mCtx.measureText(text).width;
+      const wide = rawW > 180;
+      const W = wide ? 512 : 256;
+      const H = 256;
+      c.width = W;
+      c.height = H;
       const x = c.getContext('2d');
       const isLight = /^#?fff(fff)?$/i.test(String(outline).trim());
 
-      let fontSize = 84;
+      const maxTextW = wide ? 436 : 176;
       x.font = `700 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
-      const m = x.measureText(text);
-      if (m.width > 170) {
-        fontSize = Math.max(46, Math.floor((fontSize * 170) / m.width));
+      if (rawW > maxTextW) {
+        fontSize = Math.max(24, Math.floor((fontSize * maxTextW) / rawW));
         x.font = `700 ${fontSize}px system-ui, -apple-system, "Segoe UI", sans-serif`;
       }
       const tw = x.measureText(text).width;
-      const pillW = Math.min(234, Math.max(108, tw + 52));
-      const pillH = Math.max(100, Math.round(fontSize * 1.32));
-      const px = (256 - pillW) / 2;
-      const py = (256 - pillH) / 2;
+      const pillW = Math.min(W - 18, Math.max(108, tw + 56));
+      const pillH = Math.max(96, Math.round(fontSize * 1.34));
+      const px = (W - pillW) / 2;
+      const py = (H - pillH) / 2;
+      const cx = W / 2;
 
       // Subtle pill/halo keeps vertex & vector labels legible over wireframe lines and frosted glass
       drawRoundedRect(x, px, py, pillW, pillH, pillH / 2);
-      x.fillStyle = isLight ? 'rgba(255, 255, 255, 0.90)' : 'rgba(20, 22, 27, 0.78)';
+      x.fillStyle = isLight ? 'rgba(255, 255, 255, 0.92)' : 'rgba(20, 22, 27, 0.80)';
       x.fill();
       x.lineWidth = 3;
-      x.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.22)' : 'rgba(255, 255, 255, 0.20)';
+      x.strokeStyle = isLight ? 'rgba(15, 23, 42, 0.22)' : 'rgba(255, 255, 255, 0.22)';
       x.stroke();
 
       x.textAlign = 'center';
       x.textBaseline = 'middle';
       x.lineWidth = isLight ? 4 : 6;
       x.lineJoin = 'round';
-      x.strokeStyle = isLight ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 18, 25, 0.85)';
-      x.strokeText(text, 128, 131);
+      x.strokeStyle = isLight ? 'rgba(255, 255, 255, 0.92)' : 'rgba(15, 18, 25, 0.88)';
+      x.strokeText(text, cx, 131);
       x.fillStyle = color;
-      x.fillText(text, 128, 131);
+      x.fillText(text, cx, 131);
 
       const map = new THREE.CanvasTexture(c);
       if ('encoding' in map && THREE.sRGBEncoding !== undefined) {
@@ -105,7 +113,7 @@ export function createGeomApi(THREE) {
       map.minFilter = THREE.LinearMipmapLinearFilter;
       map.magFilter = THREE.LinearFilter;
       map.generateMipmaps = true;
-      entry = { key, map, refs: 0 };
+      entry = { key, map, refs: 0, aspect: W / H };
       texCache.set(key, entry);
     }
     entry.refs += 1;
@@ -127,7 +135,7 @@ export function createGeomApi(THREE) {
     );
     s.position.copy(pos);
     const sc = (opts.scale || 0.5) * 1.12;
-    s.scale.set(sc, sc, 1);
+    s.scale.set(sc * (entry.aspect || 1), sc, 1);
     s.renderOrder = 10;
     s.userData.exportTintRole = 'label';
     s.userData.labelOpts = { text, color, outline };
@@ -397,8 +405,9 @@ export function createGeomApi(THREE) {
     const geo = new THREE.BoxGeometry(w, h, d);
     const mat = new THREE.MeshStandardMaterial({
       color: col,
-      metalness: opts.metalness ?? 0.25,
-      roughness: opts.roughness ?? 0.45,
+      metalness: opts.metalness ?? 0.06,
+      roughness: opts.roughness ?? 0.88,
+      envMapIntensity: opts.envMapIntensity ?? 0.16,
       transparent: op < 1,
       opacity: op,
       depthWrite: opts.depthWrite ?? op >= 1,
@@ -777,9 +786,9 @@ export function createGeomApi(THREE) {
         vertexColors: true,
         roughness: opts.roughness ?? 0.22,
         metalness: opts.metalness ?? 0.04,
-        clearcoat: opts.clearcoat ?? 0.45,
-        clearcoatRoughness: opts.clearcoatRoughness ?? 0.16,
-        envMapIntensity: opts.envMapIntensity ?? 0.65,
+        clearcoat: opts.clearcoat ?? 0.16,
+        clearcoatRoughness: opts.clearcoatRoughness ?? 0.22,
+        envMapIntensity: opts.envMapIntensity ?? 0.24,
         transparent: true,
         opacity: opts.opacity ?? 0.86,
         side: THREE.DoubleSide,
@@ -794,7 +803,7 @@ export function createGeomApi(THREE) {
         color: opts.wireColor ?? 0x7dd3fc,
         wireframe: true,
         transparent: true,
-        opacity: opts.wireOpacity ?? 0.10,
+        opacity: opts.wireOpacity ?? 0.06,
       })
     );
     wire.userData.exportTintRole = 'water-wire';

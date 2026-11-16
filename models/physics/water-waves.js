@@ -153,9 +153,10 @@ export default {
     const rimY = 0.42;
 
     // Лабораторный аквариумный волновой лоток на тёмном матовом основании (y = -0.62)
-    studioBox(G.water, TANK_SIZE + 0.08, 0.06, TANK_SIZE + 0.08, [0, botY, 0], 0x070b14, {
-      metalness: 0.06,
-      roughness: 0.9,
+    studioBox(G.water, TANK_SIZE + 0.08, 0.06, TANK_SIZE + 0.08, [0, botY, 0], 0x05080f, {
+      metalness: 0.05,
+      roughness: 0.92,
+      envMapIntensity: 0.14,
       edgeColor: 0x334155,
       edgeOpacity: 0.55,
     });
@@ -190,18 +191,26 @@ export default {
     for (let i = 0; i < 4; i++) {
       const [x1, z1] = corners[i];
       const [x2, z2] = corners[(i + 1) % 4];
-      seg(G.water, V(x1, botY + 0.03, z1), V(x1, rimY, z1), 0.018, 0x475569);
-      seg(G.water, V(x1, rimY, z1), V(x2, rimY, z2), 0.015, 0x64748b);
+      seg(G.water, V(x1, botY + 0.03, z1), V(x1, rimY, z1), 0.018, 0x334155, {
+        metalness: 0.12,
+        roughness: 0.55,
+        emissiveIntensity: 0.03,
+      });
+      seg(G.water, V(x1, rimY, z1), V(x2, rimY, z2), 0.015, 0x475569, {
+        metalness: 0.12,
+        roughness: 0.55,
+        emissiveIntensity: 0.03,
+      });
     }
 
     const gridHandle = waveGrid(G.water, 44, 44, TANK_SIZE, TANK_SIZE, {
-      opacity: 0.88,
-      roughness: 0.24,
+      opacity: 0.9,
+      roughness: 0.22,
       metalness: 0.04,
-      clearcoat: 0.4,
-      envMapIntensity: 0.65,
+      clearcoat: 0.15,
+      envMapIntensity: 0.22,
       wireColor: 0x38bdf8,
-      wireOpacity: 0.09,
+      wireOpacity: 0.06,
     });
 
     // Подвесные осцилляторы-дипперы источников колебаний с опорными стойками на бортик лотка
@@ -210,17 +219,23 @@ export default {
     const srcCoords =
       m.mode === 'single' ? [[0, 0]] : m.mode === 'double' ? [[-sep * 0.5, 0], [sep * 0.5, 0]] : [];
     if (srcCoords.length) {
-      seg(G.src, V(-half, rimY, 0), V(-half, 0.68, 0), 0.016, 0x64748b);
-      seg(G.src, V(half, rimY, 0), V(half, 0.68, 0), 0.016, 0x64748b);
-      dot(G.src, V(-half, rimY, 0), 0x475569, 0.036);
-      dot(G.src, V(half, rimY, 0), 0x475569, 0.036);
-      seg(G.src, V(-half, 0.68, 0), V(half, 0.68, 0), 0.016, 0x64748b);
+      const bridgeOpts = { metalness: 0.1, roughness: 0.72, emissiveIntensity: 0.015, role: 'apparatus' };
+      seg(G.src, V(-half, rimY, 0), V(-half, 0.68, 0), 0.016, 0x1e293b, bridgeOpts);
+      seg(G.src, V(half, rimY, 0), V(half, 0.68, 0), 0.016, 0x1e293b, bridgeOpts);
+      dot(G.src, V(-half, rimY, 0), 0x1e293b, 0.036, { emissiveIntensity: 0.02, roughness: 0.65, role: 'apparatus' });
+      dot(G.src, V(half, rimY, 0), 0x1e293b, 0.036, { emissiveIntensity: 0.02, roughness: 0.65, role: 'apparatus' });
+      seg(G.src, V(-half, 0.68, 0), V(half, 0.68, 0), 0.016, 0x1e293b, bridgeOpts);
       srcCoords.forEach(([sx, sz]) => {
-        const stem = cylinderShell(G.src, 0.018, 0.018, 0.55, [sx, 0.36, sz], 0xcbd5e1, 1, { metal: true });
-        const tip = dot(G.src, V(sx, 0.08, sz), 0xa855f7, 0.075, {
-          metalness: 0.2,
-          roughness: 0.2,
-          clearcoat: 0.9,
+        const stem = cylinderShell(G.src, 0.018, 0.018, 0.55, [sx, 0.36, sz], 0x334155, 1, {
+          metal: true,
+          metalness: 0.25,
+          roughness: 0.55,
+          role: 'apparatus',
+        });
+        const tip = dot(G.src, V(sx, 0.08, sz), 0xf43f5e, 0.075, {
+          metalness: 0.15,
+          roughness: 0.22,
+          clearcoat: 0.75,
           role: 'preserve',
         });
         dippers.push({ sx, sz, stem, tip });
@@ -235,8 +250,10 @@ export default {
       role: 'preserve',
     });
     ring(buoyGroup, 0.104, 0x0f172a, 0.014, { center: [0, 0, 0], role: 'preserve' });
-    const buoyMast = cylinderShell(buoyGroup, 0.012, 0.016, 0.24, [0, 0.14, 0], 0x1e293b, 1, {
+    const buoyMast = cylinderShell(buoyGroup, 0.012, 0.016, 0.24, [0, 0.14, 0], 0x0f172a, 1, {
       metal: true,
+      metalness: 0.12,
+      roughness: 0.74,
       role: 'preserve',
     });
     dot(buoyGroup, V(0, 0.27, 0), 0xef4444, 0.042, { role: 'preserve' });
@@ -262,21 +279,21 @@ export default {
     updateWaveGrid(gridHandle, (x, z) => {
       const { y, norm } = sampleWaveHeight(x, z, m.t, params);
       const u = Math.max(-1, Math.min(1, norm));
-      // Впадина -> глубокий индиго-синий, спокойная -> кобальт, гребень -> насыщенный лазурный
+      // Linear-space цвета для sRGBEncoding: глубокий индиго -> сапфир -> лазурный гребень
       if (u < 0) {
         const d = -u;
         return {
           y,
-          r: 0.04 - d * 0.025,
-          g: 0.24 - d * 0.17,
-          b: 0.62 - d * 0.36,
+          r: 0.006 - d * 0.004,
+          g: 0.050 - d * 0.035,
+          b: 0.165 - d * 0.100,
         };
       }
       return {
         y,
-        r: 0.04 + u * 0.18,
-        g: 0.24 + u * 0.48,
-        b: 0.62 + u * 0.34,
+        r: 0.006 + u * 0.026,
+        g: 0.050 + u * 0.170,
+        b: 0.165 + u * 0.395,
       };
     });
 

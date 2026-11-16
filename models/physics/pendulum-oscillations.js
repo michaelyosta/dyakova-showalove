@@ -143,8 +143,8 @@ export default {
       `<text x="${cx + 5}" y="22" font-size="9.5" fill="currentColor" opacity=".65">v</text>` +
       `<path d="${pathD}" fill="none" stroke="#38bdf8" stroke-width="2.2"/>` +
       `<circle cx="${curX.toFixed(1)}" cy="${curY.toFixed(1)}" r="4.2" fill="#f59e0b"/>` +
-      `<text x="16" y="164" font-size="10.5" fill="#22c55e">Ek</text><rect x="38" y="156" width="${wK.toFixed(1)}" height="8" rx="2" fill="#22c55e"/>` +
-      `<text x="16" y="180" font-size="10.5" fill="#3b82f6">Ep</text><rect x="38" y="172" width="${wP.toFixed(1)}" height="8" rx="2" fill="#3b82f6"/>` +
+      `<text x="16" y="164" font-size="11.5" font-weight="600" fill="#22c55e">Ek</text><rect x="38" y="156" width="${wK.toFixed(1)}" height="8" rx="2" fill="#22c55e"/>` +
+      `<text x="16" y="180" font-size="11.5" font-weight="600" fill="#3b82f6">Ep</text><rect x="38" y="172" width="${wP.toFixed(1)}" height="8" rx="2" fill="#3b82f6"/>` +
       '</svg>'
     );
   },
@@ -152,21 +152,22 @@ export default {
   build(api, opts = {}) {
     const m = opts.solved || this.evaluateAt(0, { type: 'math', L: 2, k: 16, m: 1.5, deg0: 36, x0: 0.55, beta: 0.04 });
     const G = opts.groups;
-    const { V, seg, dashedSeg, dot, cylinderShell, studioBox, coilSpring, arcSeg, trail, arrow, THREE } = api;
+    const { V, seg, dashedSeg, dot, ring, cylinderShell, studioBox, coilSpring, arcSeg, trail, arrow, THREE } = api;
     const topY = 2.4;
 
     // Лабораторный штатив на опорной плите (y = 0)
     const standX = -1.1;
-    studioBox(G.frame, 0.96, 0.06, 0.68, [standX + 0.15, 0.03, 0], 0x1e293b, {
-      metalness: 0.22,
-      roughness: 0.62,
-      edgeColor: 0x475569,
-      edgeOpacity: 0.45,
+    studioBox(G.frame, 0.96, 0.06, 0.68, [standX + 0.15, 0.03, 0], 0x05080f, {
+      metalness: 0.05,
+      roughness: 0.9,
+      envMapIntensity: 0.14,
+      edgeColor: 0x334155,
+      edgeOpacity: 0.5,
     });
     cylinderShell(G.frame, 0.032, 0.036, topY + 0.08, [standX, (topY + 0.08) / 2, 0], 0x94a3b8, 1, { metal: true });
     cylinderShell(G.frame, 0.055, 0.055, 0.1, [standX, topY, 0], 0x475569, 1, { metal: true });
     seg(G.frame, V(standX, topY, 0), V(0.14, topY, 0), 0.026, 0xcbd5e1, { metalness: 0.68, roughness: 0.28 });
-    dashedSeg(G.frame, V(0, topY, 0), V(0, 0.14, 0), 0.006, 0x475569);
+    dashedSeg(G.frame, V(0, topY, 0), V(0, 0.01, 0), 0.006, 0x475569, 0.1, 0.08, { emissiveIntensity: 0.03 });
     dot(G.frame, V(0, topY, 0), 0xe2e8f0, 0.048, { role: 'wireframe', metalness: 0.6 });
 
     const visualL = m.type === 'math' ? Math.min(2.15, 0.75 + (m.L || 2) * 0.35) : 1.25;
@@ -200,11 +201,19 @@ export default {
       arcPoints = trail(G.bob, 40, 0xfbbf24, 0.45);
     } else {
       springHandle = coilSpring(G.frame, { turns: 11, steps: 96, coilRad: 0.12, wireRad: 0.017, col: 0x7dd3fc });
-      // Муфта на стойке штатива со стрелкой уровня равновесия пружины
+      // Муфта с воротничком на стойке штатива и тонкий ориентир уровня равновесия к оси x=0
       const eqY = topY - visualL;
-      cylinderShell(G.frame, 0.05, 0.05, 0.07, [standX, eqY, 0], 0x475569, 1, { metal: true });
-      seg(G.frame, V(standX, eqY, 0), V(-0.28, eqY, 0), 0.012, 0x38bdf8);
-      dot(G.frame, V(-0.28, eqY, 0), 0x38bdf8, 0.024, { role: 'accent' });
+      cylinderShell(G.frame, 0.052, 0.052, 0.08, [standX, eqY, 0], 0x334155, 1, {
+        metal: true,
+        metalness: 0.25,
+        roughness: 0.55,
+      });
+      ring(G.frame, 0.055, 0x38bdf8, 0.008, { center: [standX, eqY, 0] });
+      seg(G.frame, V(standX, eqY, 0), V(-0.68, eqY, 0), 0.009, 0x38bdf8, { emissiveIntensity: 0.06 });
+      dashedSeg(G.frame, V(-0.68, eqY, 0), V(-0.18, eqY, 0), 0.0045, 0x38bdf8, 0.07, 0.07, {
+        opacity: 0.55,
+        emissiveIntensity: 0.04,
+      });
     }
 
     const bobRadius = 0.095 + (m.m || 1.5) * 0.018;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-board-release-b2a529ceb3ed';
+const CACHE_NAME = 'teacher-board-v19';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -36,6 +36,7 @@ const PRECACHE_URLS = [
   './models/physics/gas-burner.js',
   './models/physics/water-waves.js',
   './models/physics/pendulum-oscillations.js',
+  './models/physics/radioactive-decay.js',
 ];
 
 function isHtmlNavigationPath(pathname) {

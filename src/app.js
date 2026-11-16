@@ -428,7 +428,7 @@ try {
     onParamChange: (key, value) => {
       if (!currentModel) return;
       beforeStateChange();
-      params[key] = value;
+      params = mergeParamsFor(currentModel, { ...params, [key]: value });
       rebuildCurrent();
       schedulePersist();
     },
@@ -455,8 +455,23 @@ try {
       const target = relative ? st + deltaOrIndex : deltaOrIndex;
       goStep(target);
     },
+    onLabAction: ({ type, mode, delta, action }) => {
+      if (!currentModel?.lab) return;
+      beforeStateChange(); simRunner.pause();
+      if (type === 'defaults') params = mergeParamsFor(currentModel, {});
+      if (type === 'mode') params.labMode = mode;
+      if (type === 'step') params.lessonStep = Math.max(0, Math.min(currentModel.lab.steps.length - 1, params.lessonStep + delta));
+      if (type === 'custom') {
+        const def = currentModel.lab.actions?.find(a => a.id === action);
+        if (def) params = mergeParamsFor(currentModel, { ...params, ...def.patch(solved, params) });
+      }
+      rebuildCurrent();
+      if (type === 'defaults' || type === 'mode') simRunner.reset();
+      if (type === 'mode' && mode === 'demo') simRunner.play();
+      syncDynamicFrame(); schedulePersist();
+    },
     onPlayerAction: ({ type, value }) => {
-      if (!isSimScene()) return;
+      if (!isSimScene() || (currentModel.lab && params.labMode === 'steps' && type !== 'reset')) return;
       if (teacher.mode === 'ink') beforeStateChange();
       else board.clearGesture();
 
@@ -479,14 +494,14 @@ try {
         return;
       }
       if (type === 'back') {
-        simRunner.stepBy(-0.05);
+        simRunner.stepBy(-(currentModel.getStepSize?.(params) || 0.05));
         syncDynamicFrame();
         fitAll();
         schedulePersist();
         return;
       }
       if (type === 'fwd') {
-        simRunner.stepBy(0.05);
+        simRunner.stepBy(currentModel.getStepSize?.(params) || 0.05);
         syncDynamicFrame();
         fitAll();
         schedulePersist();
@@ -1257,6 +1272,7 @@ try {
       return;
     }
     if (isSimScene()) {
+      if (currentModel.lab && params.labMode === 'steps') return;
       if (e.code === 'Space' && !e.target.matches('button,a')) {
         e.preventDefault();
         if (teacher.mode === 'ink') enterModel();
@@ -1270,7 +1286,7 @@ try {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
         beforeStateChange();
-        simRunner.stepBy(0.05);
+        simRunner.stepBy(currentModel.getStepSize?.(params) || 0.05);
         syncDynamicFrame();
         schedulePersist();
         return;
@@ -1279,7 +1295,7 @@ try {
         e.preventDefault();
         if (currentModel.playback?.canScrub) {
           beforeStateChange();
-          simRunner.stepBy(-0.05);
+          simRunner.stepBy(-(currentModel.getStepSize?.(params) || 0.05));
           syncDynamicFrame();
           schedulePersist();
         }

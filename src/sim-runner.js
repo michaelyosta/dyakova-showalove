@@ -118,7 +118,8 @@ export function createSimRunner() {
 
   function tick(realDt) {
     if (!isSim() || !playing) return false;
-    const dt = Math.min(Math.max(realDt, 0), 0.05) * speed;
+    const timeScale = scene.getTimeScale?.(params) ?? 1;
+    const dt = Math.min(Math.max(realDt, 0), 0.05) * speed * timeScale;
     const dur = duration();
     const loop = !!scene.playback?.loop;
 

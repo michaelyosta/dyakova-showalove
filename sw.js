@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-board-v20';
+const CACHE_NAME = 'teacher-board-electromagnetic-labs-v1';
 const PRECACHE_URLS = [
   './',
   './index.html',
@@ -25,6 +25,7 @@ const PRECACHE_URLS = [
   './src/ui-catalog.js',
   './src/ui-export.js',
   './src/ui-panel.js',
+  './src/lab-panel.js',
   './src/ui-projects.js',
   './models/catalog-index.js',
   './models/registry.js',
@@ -37,6 +38,10 @@ const PRECACHE_URLS = [
   './models/physics/gas-burner.js',
   './models/physics/water-waves.js',
   './models/physics/salt-water-mhd.js',
+  './models/physics/electromagnetic-induction.js',
+  './models/physics/transformer.js',
+  './models/physics/lab/electromagnetism.js',
+  './models/physics/lab/visuals.js',
   './models/physics/pendulum-oscillations.js',
   './models/physics/radioactive-decay.js',
 ];

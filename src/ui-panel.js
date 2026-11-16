@@ -1,6 +1,7 @@
 /** Dynamic left parameter panel, layers checklist, calculation table, 2D diagram, steps & simulation player UI. */
 
 import { parseSafeSvgElement, syncCalcTable } from './dom-utils.js';
+import { createLabPanel } from './lab-panel.js';
 
 export function createPanelController({
   root,
@@ -9,6 +10,7 @@ export function createPanelController({
   onLayerToggle,
   onStepGo,
   onPlayerAction,
+  onLabAction,
 }) {
   const paramsHost = root.querySelector('[data-ref="params-host"]');
   const presetsHost = root.querySelector('[data-ref="presets-host"]');
@@ -25,6 +27,8 @@ export function createPanelController({
 
   const simResetBtn = root.querySelector('[data-action="sim-reset"]');
   const simBackBtn = root.querySelector('[data-action="sim-back"]');
+  let lessonFrozen = false;
+  let labTime = false;
   let lastSvgHtml = '';
   const simPlayBtn = root.querySelector('[data-action="sim-play"]');
   const simPlayLabel = root.querySelector('[data-ref="sim-play-label"]');
@@ -35,6 +39,7 @@ export function createPanelController({
   const simSpeedBtn = root.querySelector('[data-action="sim-speed"]');
 
   let layerCheckboxes = [];
+  const lab = createLabPanel(root, onLabAction);
 
   pvEl.onclick = () => onStepGo(-1, true);
   nxEl.onclick = () => onStepGo(1, true);
@@ -92,6 +97,20 @@ export function createPanelController({
       const valNode = document.createElement('b');
       input.oninput = () => onParamChange(p.key, Number(input.value));
       label.append(cap, input, valNode);
+      if (p.exact) {
+        const number = document.createElement('input'); number.type = 'number'; number.className = 'tb-param-number';
+        number.min = String(p.min); number.max = String(p.max); number.step = String(p.step); number.value = String(params[p.key]);
+        number.setAttribute('aria-label', `${p.label} — точное значение`); number.dataset.exact = p.key;
+        number.oninput = () => {
+          const value = Number(number.value);
+          if (number.value !== '' && Number.isFinite(value) && value >= p.min && value <= p.max) onParamChange(p.key, value);
+        };
+        number.onchange = () => {
+          const value = Number(number.value);
+          if (number.value !== '' && Number.isFinite(value)) onParamChange(p.key, Math.max(p.min, Math.min(p.max, value)));
+        };
+        label.append(number);
+      }
       paramsHost.append(label);
     });
 
@@ -123,16 +142,22 @@ export function createPanelController({
   }
 
   function syncValues(model, params, solved, groups) {
+    const displayed = model.lab?.displayParams?.(solved, params) || params;
     (model.params || []).forEach((p) => {
       const row = paramsHost.querySelector(`[data-param-row="${p.key}"]`);
       if (row) row.hidden = p.visibleIf ? !p.visibleIf(params) : false;
       const ctrl = paramsHost.querySelector(`[data-p="${p.key}"]`);
       if (!ctrl) return;
-      const strVal = String(params[p.key]);
+      const locked = params.labMode !== 'free' && !!model.lab?.lockedControls?.includes(p.key);
+      ctrl.disabled = locked;
+      const strVal = String(displayed[p.key]);
       if (ctrl.value !== strVal) ctrl.value = strVal;
+      const number = row?.querySelector('[data-exact]');
+      if (number) number.disabled = locked;
+      if (number && document.activeElement !== number && number.value !== strVal) number.value = strVal;
       if (p.type !== 'select') {
         const b = ctrl.nextElementSibling;
-        const formatted = p.format ? p.format(params[p.key]) : Number(params[p.key]).toFixed(2);
+        const formatted = p.format ? p.format(displayed[p.key]) : Number(displayed[p.key]).toFixed(2);
         if (b && b.textContent !== formatted) b.textContent = formatted;
       }
     });
@@ -141,6 +166,9 @@ export function createPanelController({
     syncCalcTable(calcEl, rows);
 
     syncDiagram(model, params, solved, groups);
+    lab.sync(model, params, solved);
+    lessonFrozen = !!model.lab && params.labMode === 'steps';
+    for (const b of [simPlayBtn, simFwdBtn, simSpeedBtn]) if (b) b.disabled = lessonFrozen;
   }
 
   function syncDiagram(model, params, solved, groups) {
@@ -186,6 +214,7 @@ export function createPanelController({
 
   function setBottomBarKind(model) {
     const isSim = model?.kind === 'simulation';
+    labTime = !!model?.lab;
     if (stepsBar) stepsBar.hidden = isSim;
     if (playerBar) playerBar.hidden = !isSim;
     if (panelHelp) {
@@ -212,10 +241,10 @@ export function createPanelController({
     }
     if (simTimeEl) {
       simTimeEl.textContent = hasFiniteDur
-        ? `t = ${simTime.toFixed(2)} / ${duration.toFixed(2)} с`
-        : `t = ${simTime.toFixed(2)} с`;
+        ? `t = ${simTime.toFixed(labTime ? 4 : 2)} / ${duration.toFixed(2)} с`
+        : `t = ${simTime.toFixed(labTime ? 4 : 2)} с`;
     }
-    if (simBackBtn) simBackBtn.disabled = !canScrub || simTime <= 0.001;
+    if (simBackBtn) simBackBtn.disabled = lessonFrozen || !canScrub || simTime <= 0.001;
   }
 
   return {

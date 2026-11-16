@@ -2258,3 +2258,31 @@ body::-webkit-scrollbar-corner,
 #teacher-board-concept table[data-scene="salt-water-mhd"] { table-layout: fixed; }
 #teacher-board-concept table[data-scene="salt-water-mhd"] td { width: 44%; overflow-wrap: anywhere; }
 #teacher-board-concept table[data-scene="salt-water-mhd"] td + td { width: 56%; white-space: normal; }
+
+/* Laboratory controls, live instruments and oscilloscopes. */
+#teacher-board-concept .tb-lab { flex: 0 1 auto; min-height: 140px; max-height: 47%; overflow: auto; padding: 12px 16px; border-top: 1px solid var(--tb-line); background: var(--tb-panel); font-size: 13px; line-height: 1.5; }
+#teacher-board-concept .tb-lab[hidden], #teacher-board-concept .tb-lab [hidden], #teacher-board-concept [data-param-row][hidden] { display: none; }
+#teacher-board-concept .tb-lab-modes, #teacher-board-concept .tb-lab-actions, #teacher-board-concept .tb-lab-navigation { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+#teacher-board-concept .tb-lab button { min-height: 38px; padding: 6px 10px; font-size: 12px; }
+#teacher-board-concept .tb-lab button[aria-pressed="true"] { color: #7dd3fc; border-color: #38bdf8; background: #38bdf81a; }
+#teacher-board-concept .tb-lab p { margin: 5px 0 10px; }
+#teacher-board-concept .tb-lab-notice, #teacher-board-concept .tb-lab-footnote { color: var(--tb-fg-2); font-size: 12px; }
+#teacher-board-concept .tb-lab-readings { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 6px; margin: 10px 0; }
+#teacher-board-concept .tb-lab-readings > div { padding: 8px; background: var(--tb-bg-deep); border: 1px solid var(--tb-line); border-radius: 8px; min-width: 0; }
+#teacher-board-concept .tb-lab-readings span, #teacher-board-concept .tb-lab-readings b { display: block; overflow-wrap: anywhere; }
+#teacher-board-concept .tb-lab-readings span { font-size: 11px; color: var(--tb-fg-2); }
+#teacher-board-concept .tb-lab-readings b { color: #fef3c7; font-size: 15px; font-variant-numeric: tabular-nums; }
+#teacher-board-concept .tb-lab-scope { width: 100%; overflow-x: auto; }
+#teacher-board-concept .tb-lab-scope svg { display: block; width: 100%; min-width: 420px; }
+#teacher-board-concept .tb-lab details { margin-top: 12px; }
+#teacher-board-concept .tb-lab fieldset { border: 1px solid var(--tb-line); border-radius: 8px; padding: 10px; margin: 12px 0; }
+#teacher-board-concept .tb-lab fieldset button { display: block; text-align: left; width: 100%; margin-top: 6px; }
+#teacher-board-concept .tb-param-number { grid-column: 1 / -1; width: 100%; box-sizing: border-box; padding: 6px 8px; border-radius: 6px; background: var(--tb-bg-deep); color: var(--tb-fg); border: 1px solid var(--tb-line-strong); font: inherit; }
+#teacher-board-concept table[data-scene="electromagnetic-induction"], #teacher-board-concept table[data-scene="transformer"] { table-layout: fixed; }
+#teacher-board-concept table[data-scene="electromagnetic-induction"] td, #teacher-board-concept table[data-scene="transformer"] td { width: 50%; white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 850px) { #teacher-board-concept .tb-lab-readings { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width: 570px) { #teacher-board-concept .tb-lab { flex: none; max-height: none; overflow: visible; padding: 12px; } #teacher-board-concept[data-lab]:not([data-lab=""]) .tb-scene-stage { min-height: 300px; height: 48dvh; } }
+#teacher-board-concept .tb-parameter:has(.tb-param-number) { display: grid; grid-template-columns: minmax(0,1fr) auto 70px; gap: 5px 8px; align-items: center; }
+#teacher-board-concept .tb-parameter:has(.tb-param-number) > span { grid-column: 1 / -1; }
+#teacher-board-concept .tb-parameter:has(.tb-param-number) > input[type="range"] { width: 100%; min-width: 0; margin: 0; }
+#teacher-board-concept .tb-parameter > .tb-param-number { grid-column: auto; min-width: 0; }

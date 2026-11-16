@@ -1,4 +1,4 @@
-const CACHE_NAME = 'teacher-board-electromagnetic-labs-v1';
+const CACHE_NAME = 'teacher-board-electromagnetic-labs-v2';
 const PRECACHE_URLS = [
   './',
   './index.html',

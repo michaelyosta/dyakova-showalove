@@ -50,7 +50,7 @@ export default {
   getTimeScale: p => p.labMode === 'steps' ? 0 : p.timeView === 'slow' ? 0.01 : 1,
   getStepSize: p => 1 / (p.frequency * 16),
   layers: [
-    { key: 'core', label: 'Ферромагнитный сердечник', color: '#64748b', step: 0 },
+    { key: 'core', label: 'Ферромагнитный сердечник · прозрачный срез', color: '#64748b', step: 0 },
     { key: 'primary', label: 'Первичная цепь · медная', color: '#fb923c', step: 0 },
     { key: 'secondary', label: 'Вторичная цепь · голубая', color: '#38bdf8', step: 0 },
     { key: 'field', label: 'Поток Φ в сердечнике', color: '#c084fc', step: 0 },
@@ -58,7 +58,7 @@ export default {
     { key: 'labels', label: 'Приборы и счётчики витков', color: '#e2e8f0', step: 0 },
   ],
   cameraDefaults: { position: [5.8, 4.3, 8.5], target: [0, 1.1, 0], fitRadius: 4.1 },
-  help: 'U и I на приборах — действующие значения; графики показывают мгновенные. Длины стрелок условные. Витки нарисованы сокращённо, точное число указано счётчиком. Реальный режим — линейная схема с R₁, R₂, L намагничивания и потерями в сердечнике, без насыщения и потоков рассеяния. При B > 1,6 Тл численные прогнозы реального устройства ненадёжны. DC: только установившийся режим; бросок тока при включении не моделируется.',
+  help: 'U и I на приборах — действующие значения; графики показывают мгновенные. Сердечник полупрозрачен, чтобы видеть поток внутри. Длины стрелок условные. Витки нарисованы сокращённо, точное число указано счётчиком. Реальный режим — линейная схема с R₁, R₂, L намагничивания и потерями в сердечнике, без насыщения и потоков рассеяния. При B > 1,6 Тл численные прогнозы реального устройства ненадёжны. DC: только установившийся режим; бросок тока при включении не моделируется.',
   summarizeParams: p => `N₁=${p.n1} / N₂=${p.n2} · U₁=${p.voltage} В`,
   evaluateAt(t, p) { return transformerFrame(p, t); },
   getCalcRows(m) { return [
@@ -105,8 +105,8 @@ export default {
     const { V, studioBox, label, arrow } = api, p = m.config;
     // Closed magnetic path; the two electrical paths remain disjoint.
     studioBox(G.core, 4, 0.12, 2.6, [0, 0, 0], 0x1e293b);
-    for (const x of [-1.05, 1.05]) studioBox(G.core, 0.5, 2.2, 0.5, [x, 1.4, 0], 0x64748b, { edgeColor: 0x94a3b8 });
-    for (const y of [0.35, 2.45]) studioBox(G.core, 2.6, 0.45, 0.5, [0, y, 0], 0x64748b, { edgeColor: 0x94a3b8 });
+    for (const x of [-1.05, 1.05]) studioBox(G.core, 0.5, 2.2, 0.5, [x, 1.4, 0], 0x64748b, { edgeColor: 0x94a3b8, opacity: 0.35 });
+    for (const y of [0.35, 2.45]) studioBox(G.core, 2.6, 0.45, 0.5, [0, y, 0], 0x64748b, { edgeColor: 0x94a3b8, opacity: 0.35 });
     for (let z = -0.2; z <= 0.2; z += 0.08) for (const y of [0.35, 2.45]) api.seg(G.core, V(-1.2, y, z), V(1.2, y, z), 0.006, 0x94a3b8);
     const primary = coil(api, G.primary, { axis: 'y', center: [-1.05, 1.4, 0], radius: 0.46, length: 1.45, turns: p.n1, color: 0xfb923c });
     const secondary = coil(api, G.secondary, { axis: 'y', center: [1.05, 1.4, 0], radius: 0.46, length: 1.45, turns: p.n2, color: 0x38bdf8 });
